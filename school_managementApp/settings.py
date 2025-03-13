@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-qp^gmm0*_(!x0cm3h+*n!4t)gv#pt3zcy1p2fr@kaz4um=p7fz
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["schoolapp-algorithmxcomp.pythonanywhere.com","*"]
 
 
 # Application definition

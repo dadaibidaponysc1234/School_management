@@ -159,25 +159,6 @@ class SchoolAdmin(models.Model):
         return f"{self.first_name} {self.surname} - {self.school.school_name}"
 
 
-# class Year(models.Model):
-#     """
-#     Represents academic years for a school.
-#     """
-#     year_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-#     name = models.CharField(max_length=100)
-#     start_date = models.DateField()
-#     end_date = models.DateField()
-#     school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="years")
-#     status = models.BooleanField(default=False)
-
-#     def __str__(self):
-#         return f"{self.name} ({self.school.school_name})"
-
-#     def save(self, *args, **kwargs):
-#         # Ensure only one active year per school
-#         if self.status:
-#             Year.objects.filter(school=self.school, status=True).update(status=False)
-#         super().save(*args, **kwargs)
 
 class Year(models.Model):
     """
@@ -191,21 +172,18 @@ class Year(models.Model):
     status = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
 
+    def save(self, *args, **kwargs):
+        # If this year is being set to active
+        if self.status:
+            # Deactivate other years for the same school
+            Year.objects.filter(school=self.school, status=True).exclude(pk=self.pk).update(status=False)
+        super().save(*args, **kwargs)
+
 
     def __str__(self):
         return f"{self.name} ({self.school.school_name})"
 
-    # def save(self, *args, **kwargs):
-    #     # Automatically set the latest year as active
-    #     super().save(*args, **kwargs)  # Save the current instance first
-    #     latest_year = Year.objects.filter(school=self.school).order_by('-created_at').first()
-
-    #     if latest_year and latest_year.year_id == self.year_id:
-    #         # Set this year as active and deactivate others
-    #         Year.objects.filter(school=self.school).exclude(pk=self.pk).update(status=False)
-    #         self.status = True
-    #         super().save(update_fields=['status'])  # Update status for the current instance
-
+    
 
 class Term(models.Model):
     """
@@ -220,20 +198,17 @@ class Term(models.Model):
     status = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
 
+    def save(self, *args, **kwargs):
+        # If this year is being set to active
+        if self.status:
+            # Deactivate other years for the same school
+            Term.objects.filter(school=self.school, status=True).exclude(pk=self.pk).update(status=False)
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.name} - {self.year.name} ({self.school.school_name})"
 
-    # def save(self, *args, **kwargs):
-    #     # Save the current instance
-    #     super().save(*args, **kwargs)
-
-    #     # Automatically activate the latest term and deactivate others for the same year
-    #     latest_term = Term.objects.filter(year=self.year).order_by('-created_at').first()
-    #     if latest_term and latest_term.term_id == self.term_id:
-    #         # Deactivate other terms in the same year
-    #         Term.objects.filter(year=self.year).exclude(pk=self.pk).update(status=False)
-    #         self.status = True
-    #         super().save(update_fields=['status'])
+    
 
 class ClassYear(models.Model):
     """
@@ -292,7 +267,7 @@ class Student(models.Model):
     address = models.CharField(max_length=255)
     city = models.CharField(max_length=255)
     state = models.CharField(max_length=255)
-    region = models.CharField(max_length=255)
+    region = models.CharField(max_length=255,null=True, blank=True)
     country = models.CharField(max_length=255)
     admission_date = models.DateField()
     status = models.CharField(max_length=20, default="Active")
@@ -391,6 +366,51 @@ class ClassTeacher(models.Model):
         return f"{self.teacher.first_name} {self.teacher.last_name} - {self.class_assigned.arm_name}"
 
 
+class SubjectClass(models.Model):
+    subject_class_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    subject = models.ForeignKey('Subject', on_delete=models.CASCADE, related_name="subject_class")
+    # class_year= models.ForeignKey('ClassYear', on_delete=models.CASCADE, related_name="subject_class")
+    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="subject_class")
+    department = models.ForeignKey('Department', on_delete=models.SET_NULL, null=True, blank=True, related_name="subject_class")  # Fix here
+    
+    def __str__(self):
+        return f"{self.subject.name} ({self.department.name})"
+
+class ClassDepartment(models.Model):
+    subject_class_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="class_department")
+    classes = models.ForeignKey('Class', on_delete=models.CASCADE, related_name="class_department")
+    department = models.ForeignKey('Department', on_delete=models.SET_NULL, null=True, blank=True, related_name="class_department")  # Fix here
+    
+    def __str__(self):
+        return f"{self.classes.arm_name} ({self.department.name})"
+
+class TeacherAssignment(models.Model):
+    """
+    Tracks teacher assignments to subjects and classes.
+    """
+    teacher_subject_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    teacher = models.ForeignKey('Teacher', on_delete=models.SET_NULL, null=True, blank=True, related_name="subject_assignments")
+    subject = models.ForeignKey('SubjectClass', on_delete=models.CASCADE, related_name="teacher_assignments")
+    class_assigned = models.ForeignKey('ClassDepartment', on_delete=models.CASCADE, related_name="teacher_assignments")
+    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="teacher_assignments")
+    
+    # availability = models.JSONField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.teacher.first_name} {self.class_assigned.classes.arm_name} - {self.subject.subject.name} {self.subject.department.name}"
+
+
+class StudentClass(models.Model):
+    student_class_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name="subject_class")
+    class_year = models.ForeignKey('ClassYear', on_delete=models.CASCADE, related_name="subject_class")
+    class_arm = models.ForeignKey('ClassDepartment', on_delete=models.CASCADE, related_name="subject_class")
+
+    def __str__(self):
+        return f"{self.student.surname} {self.class_arm.classes.arm_name}"
+
+
 class SubjectRegistrationControl(models.Model):
     """
     Controls whether students can register subjects for a given school.
@@ -425,114 +445,6 @@ class StudentClassAndSubjectAssignment(models.Model):
     def __str__(self):
         return f"Assignment for {self.student.first_name} {self.student.last_name}"
 
-
-class TeacherAssignment(models.Model):
-    """
-    Tracks teacher assignments to subjects and classes.
-    """
-    teacher_subject_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    teacher = models.ForeignKey('Teacher', on_delete=models.CASCADE, related_name="subject_assignments")
-    subject = models.ForeignKey('Subject', on_delete=models.CASCADE, related_name="teacher_assignments")
-    class_assigned = models.ForeignKey('Class', on_delete=models.CASCADE, related_name="teacher_assignments")
-    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="teacher_assignments")
-    department = models.ForeignKey('Department', on_delete=models.SET_NULL, null=True, blank=True, related_name="teacher_assignments")  # Fix here
-    availability = models.JSONField(null=True, blank=True)
-
-    def __str__(self):
-        return f"{self.teacher.first_name} {self.teacher.last_name} - {self.subject.name}"
-
-
-class Day(models.Model):
-    """
-    Represents days of the week or academic schedule.
-    """
-    day_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=100)
-    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="days")
-
-    def __str__(self):
-        return self.name
-
-
-class Period(models.Model):
-    """
-    Represents time periods in a school's timetable.
-    """
-    period_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="periods")
-    start_time = models.TimeField()
-    end_time = models.TimeField()
-
-    def __str__(self):
-        return f"{self.start_time} - {self.end_time}"
-
-
-class SubjectPeriodLimit(models.Model):
-    """
-    Represents subject-specific period constraints.
-    """
-    subjectperiodlimit_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="subject_period_limits")
-    subject = models.ForeignKey('Subject', on_delete=models.CASCADE, related_name="period_limits")
-    periods_per_week = models.IntegerField()
-    double_periods = models.IntegerField()
-
-    def __str__(self):
-        return f"{self.subject.name} ({self.periods_per_week} periods/week)"
-
-
-class Constraint(models.Model):
-    """
-    Represents time constraints for a school (e.g., breaks, fellowship).
-    """
-    school = models.OneToOneField('School', on_delete=models.CASCADE, related_name="constraints")
-    fellowship_time = models.JSONField()
-    break_times = models.JSONField()
-
-    def __str__(self):
-        return f"Constraints for {self.school.school_name}"
-
-class AttendancePolicy(models.Model):
-    """
-    Represents attendance requirements for a school.
-    """
-    policy_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="attendance_policies")
-    minimum_attendance_percentage = models.FloatField()
-    total_time_school_open = models.CharField(max_length=100)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"Attendance Policy ({self.minimum_attendance_percentage}%)"
-
-class FeeCategory(models.Model):
-    """
-    Represents fee categories for specific classes.
-    """
-    fee_category_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    class_level = models.ForeignKey('Class', on_delete=models.CASCADE, related_name="fee_categories")
-    name = models.CharField(max_length=100)
-    description = models.TextField(null=True, blank=True)
-    amount = models.FloatField()
-    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="fee_categories")
-
-    def __str__(self):
-        return self.name
-
-
-class Fee(models.Model):
-    """
-    Represents individual student fee records.
-    """
-    fee_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name="fees")
-    fee_category = models.ForeignKey(FeeCategory, on_delete=models.CASCADE, related_name="fees")
-    amount = models.FloatField()
-    is_paid = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"Fee for {self.student.first_name} {self.student.last_name}"
 
 class AssessmentCategory(models.Model):
     """
@@ -719,6 +631,104 @@ class AnnualResult(models.Model):
             self.annual_average = sum(valid_scores) / len(valid_scores)
             self.save()
         return self.annual_average
+
+
+
+
+class Day(models.Model):
+    """
+    Represents days of the week or academic schedule.
+    """
+    day_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100)
+    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="days")
+
+    def __str__(self):
+        return self.name
+
+
+class Period(models.Model):
+    """
+    Represents time periods in a school's timetable.
+    """
+    period_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="periods")
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+
+    def __str__(self):
+        return f"{self.start_time} - {self.end_time}"
+
+
+class SubjectPeriodLimit(models.Model):
+    """
+    Represents subject-specific period constraints.
+    """
+    subjectperiodlimit_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="subject_period_limits")
+    subject = models.ForeignKey('Subject', on_delete=models.CASCADE, related_name="period_limits")
+    periods_per_week = models.IntegerField()
+    double_periods = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.subject.name} ({self.periods_per_week} periods/week)"
+
+
+class Constraint(models.Model):
+    """
+    Represents time constraints for a school (e.g., breaks, fellowship).
+    """
+    school = models.OneToOneField('School', on_delete=models.CASCADE, related_name="constraints")
+    fellowship_time = models.JSONField()
+    break_times = models.JSONField()
+
+    def __str__(self):
+        return f"Constraints for {self.school.school_name}"
+
+class AttendancePolicy(models.Model):
+    """
+    Represents attendance requirements for a school.
+    """
+    policy_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="attendance_policies")
+    minimum_attendance_percentage = models.FloatField()
+    total_time_school_open = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Attendance Policy ({self.minimum_attendance_percentage}%)"
+
+class FeeCategory(models.Model):
+    """
+    Represents fee categories for specific classes.
+    """
+    fee_category_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    class_level = models.ForeignKey('Class', on_delete=models.CASCADE, related_name="fee_categories")
+    name = models.CharField(max_length=100)
+    description = models.TextField(null=True, blank=True)
+    amount = models.FloatField()
+    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="fee_categories")
+
+    def __str__(self):
+        return self.name
+
+
+class Fee(models.Model):
+    """
+    Represents individual student fee records.
+    """
+    fee_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name="fees")
+    fee_category = models.ForeignKey(FeeCategory, on_delete=models.CASCADE, related_name="fees")
+    amount = models.FloatField()
+    is_paid = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Fee for {self.student.first_name} {self.student.last_name}"
+
+
+
 
 
 class Notification(models.Model):

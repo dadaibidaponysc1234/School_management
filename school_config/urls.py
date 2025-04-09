@@ -8,9 +8,11 @@ from .views import (YearListCreateView, YearDetailView, TermListCreateView,
                     StudentClassAndSubjectAssignmentDetailView,SubjectRegistrationControlView,
                     SubjectRegistrationControlListView,SubjectApprovalView,MultipleSubjectApprovalView,
                     BulkClassTeacherCreateView,ClassTeacherListView,ClassTeacherUpdateView,DeleteMultipleClassTeachersView,
-                    BulkTeacherAssignmentCreateView,
-                    )
+                    SubjectClassListCreateView, SubjectClassDetailView, ClassDepartmentListCreateView,
+                    ClassDepartmentDetailView, StudentClassListCreateView, StudentClassDetailView
 
+                    )
+#BulkTeacherAssignmentCreateView,
 
 urlpatterns = [
     path('years/', YearListCreateView.as_view(), name='year-list-create'),
@@ -51,10 +53,19 @@ urlpatterns = [
     path('class_teachers/delete-multiple/', DeleteMultipleClassTeachersView.as_view(), name='delete-multiple-class-teachers'),
 
 ###################################################################################################    
+    path('class_departments/', ClassDepartmentListCreateView.as_view(), name='class_department_list_create'),
+    path('class_departments/<uuid:subject_class_id>/', ClassDepartmentDetailView.as_view(), name='class_department_detail'),
+    
+    path('subject_classes/', SubjectClassListCreateView.as_view(), name='subject-class-list-create'),
+    path('subject_classes/<uuid:subject_class_id>/', SubjectClassDetailView.as_view(), name='subject-class-detail'),
+    
     path('teacher_assignments/', TeacherAssignmentListCreateView.as_view(), name='teacher-assignment-list-create'),
-    path('teacher_assignments/bulk_create/', BulkTeacherAssignmentCreateView.as_view(), name='bulk-teacher-assignment'),
     path('teacher_assignments/<uuid:pk>/', TeacherAssignmentDetailView.as_view(), name='teacher-assignment-detail'),
+####################################################################################################
+    path('student_classes/', StudentClassListCreateView.as_view(), name='studentclass-list-create'),
+    path('student_classes/<uuid:student_class_id>/', StudentClassDetailView.as_view(), name='studentclass-detail'),
 
+####################################################################################################
      # Student Assignments
     path('subject-registration/', StudentClassAndSubjectAssignmentListCreateView.as_view(), name='student-subject-registration'),
     path('subject-registration/<uuid:pk>/', StudentClassAndSubjectAssignmentDetailView.as_view(), name='subject-registration-detail'),

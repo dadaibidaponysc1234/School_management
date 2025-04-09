@@ -182,10 +182,10 @@ class SchoolListAPIView(ListAPIView):
     queryset = School.objects.all().order_by('school_name')
     serializer_class = SchoolListSerializer
     pagination_class = StandardResultsSetPagination
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['city', 'state', 'school_type', 'education_level']
-    filter_backends = [SearchFilter]
-    search_fields = ['school_name', 'short_name']
+    # filter_backends = [DjangoFilterBackend]
+    # filterset_fields = ['city', 'state', 'school_type', 'education_level']
+    # filter_backends = [SearchFilter]
+    # search_fields = ['school_name', 'short_name']
 
 #views for both update and delete school
 class SchoolDetailAPIView(RetrieveUpdateDestroyAPIView):

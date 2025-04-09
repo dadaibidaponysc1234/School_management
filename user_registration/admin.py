@@ -9,7 +9,7 @@ from .models import (Role, UserRole, SuperAdmin, School,Subscription,
                      ScoreObtainedPerAssessment, ContinuousAssessment,Result,AnnualResult,Notification, 
                      ClassTeacherComment, Attendance, AttendanceFlag, StudentSubjectAssignment,
                      StudentRegistrationPin,StudentClassAndSubjectAssignment,Timetable,ClassTimetable,
-                     TeacherTimetable
+                     TeacherTimetable,SubjectClass,ClassDepartment,StudentClass
                      )
 
 # admin.site.register(CustomUser)
@@ -26,7 +26,7 @@ admin.site.register(Term)
 admin.site.register(ClassYear)
 admin.site.register(Class)
 admin.site.register(Classroom)
-# admin.site.register(Parent)
+admin.site.register(StudentClass)
 admin.site.register(Student)
 admin.site.register(Teacher)
 admin.site.register(Department)
@@ -59,5 +59,7 @@ admin.site.register(StudentClassAndSubjectAssignment)
 admin.site.register(Timetable)
 admin.site.register(ClassTimetable)
 admin.site.register(TeacherTimetable)
+admin.site.register(SubjectClass)
+admin.site.register(ClassDepartment)
 
  

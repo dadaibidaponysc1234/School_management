@@ -8,8 +8,8 @@ from user_registration.models import (Role, UserRole, SuperAdmin, School,Subscri
                      SubjectPeriodLimit,Constraint,AttendancePolicy,FeeCategory,
                      Fee,AssessmentCategory,ExamCategory,ScorePerAssessmentInstance,ExamScore, 
                      ScoreObtainedPerAssessment, ContinuousAssessment,Result,AnnualResult,Notification, 
-                     ClassTeacherComment, Attendance, AttendanceFlag, StudentSubjectAssignment,
-                     StudentClassAndSubjectAssignment,SubjectRegistrationControl)
+                     ClassTeacherComment, Attendance, AttendanceFlag, StudentSubjectAssignment,StudentClass,
+                     StudentClassAndSubjectAssignment,SubjectRegistrationControl,SubjectClass,ClassDepartment)
 
 
 class YearSerializer(serializers.ModelSerializer):
@@ -34,7 +34,6 @@ class YearSerializer(serializers.ModelSerializer):
 
         return Year.objects.create(school=school, **validated_data)
 
-
 class TermSerializer(serializers.ModelSerializer):
     # school_name = serializers.CharField(source="school.school_name", read_only=True)  # Fetch school name
     school_name = serializers.CharField(source="school.school_name", read_only=True)  # Fetch school name
@@ -55,7 +54,6 @@ class ClassYearSerializer(serializers.ModelSerializer):
         fields = ['class_year_id', 'school', 'school_name', 'year', 'year_name', 'class_name']
         read_only_fields = ['class_year_id', 'school', 'school_name', 'year_name']
 
-
 class ClassSerializer(serializers.ModelSerializer):
     """
     Serializer for Class including School Name, Year Name, and Class Year Name.
@@ -68,8 +66,6 @@ class ClassSerializer(serializers.ModelSerializer):
         model = Class
         fields = ['class_id', 'arm_name', 'class_year', 'class_year_name', 'year_name', 'school', 'school_name']
         read_only_fields = ['class_id', 'school', 'school_name', 'year_name', 'class_year_name']
-
-
 
 class ClassroomSerializer(serializers.ModelSerializer):
     school_name = serializers.CharField(source="school.school_name", read_only=True)  # Fetch school name
@@ -118,27 +114,75 @@ class ClassTeacherSerializer(serializers.ModelSerializer):
         }
         read_only_fields = ['school']
 
+#############################################################################################################
+class SubjectClassSerializer(serializers.ModelSerializer):
+    """
+    Serializer for SubjectClass model.
+    Returns related subject, school, and department names.
+    """
+    subject_name = serializers.CharField(source='subject.name', read_only=True)
+    school_name = serializers.CharField(source='school.school_name', read_only=True)
+    department_name = serializers.CharField(source='department.name', read_only=True)
 
+    class Meta:
+        model = SubjectClass
+        fields = [
+            'subject_class_id', 'subject', 'school', 'department', 
+            'subject_name', 'school_name', 'department_name'
+        ]
+        read_only_fields = ['school']
 
+#############################################################################################################
+class ClassDepartmentSerializer(serializers.ModelSerializer):
+    class_name = serializers.CharField(source='classes.arm_name', read_only=True)
+    school_name = serializers.CharField(source='school.school_name', read_only=True)
+    department_name = serializers.CharField(source='department.name', read_only=True)
+    
+    class Meta:
+        model = ClassDepartment
+        fields = ['subject_class_id', 'school', 'classes', 'department', 'class_name', 'school_name', 'department_name']
+        read_only_fields = ['school']
 
+#############################################################################################################
 class TeacherAssignmentSerializer(serializers.ModelSerializer):
     """
     Serializer for teacher assignments to subjects and classes.
     """
     teacher_name = serializers.CharField(source='teacher.first_name', read_only=True)
-    subject_name = serializers.CharField(source='subject.name', read_only=True)
-    class_name = serializers.CharField(source='class_assigned.arm_name', read_only=True)
+    teacher_lastname = serializers.CharField(source='teacher.last_name', read_only=True)
+    subject_name = serializers.CharField(source='subject.subject.name', read_only=True)
+    class_name = serializers.CharField(source='class_assigned.classes.arm_name', read_only=True)
+    school_name = serializers.CharField(source='school.school_name', read_only=True)
+    department_name = serializers.CharField(source='subject.department.name', read_only=True)
 
     class Meta:
         model = TeacherAssignment
         fields = [
-            'teacher_subject_id', 'teacher', 'subject', 'class_assigned', 'school', 
-            'availability', 'teacher_name', 'subject_name', 'class_name'
+            'teacher_subject_id', 'teacher', 'subject', 'class_assigned', 'school',
+            'teacher_name', 'teacher_lastname', 'subject_name', 'class_name', 'school_name', 'department_name'
         ]
+        extra_kwargs = {
+            'teacher': {'write_only': True},
+            'subject': {'write_only': True},
+            'class_assigned': {'write_only': True},
+        }
         read_only_fields = ['teacher_subject_id', 'school']
+        
+#############################################################################################################
+
+class StudentClassSerializer(serializers.ModelSerializer):
+    student_name = serializers.CharField(source='student.full_name', read_only=True)
+    class_name = serializers.CharField(source='class_arm.classes.arm_name', read_only=True)
+
+    class Meta:
+        model = StudentClass
+        fields = [
+            'student_class_id', 'student', 'class_year', 'class_arm',
+            'student_name', 'class_name'
+        ]
 
 
-
+#############################################################################################################
 class StudentClassAndSubjectAssignmentSerializer(serializers.ModelSerializer):
     """
     Serializer for student class and subject assignment.

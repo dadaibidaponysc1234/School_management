@@ -43,6 +43,7 @@ urlpatterns = [
     path('api/', include('user_registration.urls')),
     path('api/', include('school_config.urls')),
     path('api/', include('timetable.urls')),
+    path('api/', include('Allstat.urls')),
     path('api/notification', include('notification.urls')),
     path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),

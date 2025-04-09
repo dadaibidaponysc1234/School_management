@@ -44,12 +44,14 @@ INSTALLED_APPS = [
     'corsheaders',  # Ensure this is installed
     'drf_yasg',
     'rest_framework',
+    'rest_framework.authtoken',
     'rest_framework_simplejwt',
     'django_filters',
     'user_registration',
     'school_config',
     'timetable',
     'notification',
+    'Allstat',
 ]
 
 MIDDLEWARE = [
@@ -135,7 +137,9 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 STORAGES = {
-    # ...
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },

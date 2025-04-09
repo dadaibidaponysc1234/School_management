@@ -7,8 +7,9 @@ from user_registration.models import (User,Role, UserRole, SuperAdmin, School,Su
                      SubjectPeriodLimit,Constraint,AttendancePolicy,FeeCategory,
                      Fee,AssessmentCategory,ExamCategory,ScorePerAssessmentInstance,ExamScore, 
                      ScoreObtainedPerAssessment, ContinuousAssessment,Result,AnnualResult,Notification, 
-                     ClassTeacherComment, Attendance, AttendanceFlag, StudentSubjectAssignment, 
-                     StudentRegistrationPin,SubjectRegistrationControl,StudentClassAndSubjectAssignment)
+                     ClassTeacherComment, Attendance, AttendanceFlag, StudentSubjectAssignment, SubjectClass,
+                     StudentRegistrationPin,SubjectRegistrationControl,StudentClassAndSubjectAssignment,
+                     ClassDepartment,StudentClass)
 
 
 from .serializers import (YearSerializer,TermSerializer,ClassYearSerializer,
@@ -16,7 +17,7 @@ from .serializers import (YearSerializer,TermSerializer,ClassYearSerializer,
                           SubjectSerializer,ClassTeacherSerializer,TeacherAssignmentSerializer,
                           StudentClassAndSubjectAssignmentSerializer, SubjectRegistrationControlSerializer,
                           DaySerializer,PeriodSerializer,SubjectPeriodLimitSerializer,
-                          ConstraintSerializer
+                          ConstraintSerializer,SubjectClassSerializer,ClassDepartmentSerializer,StudentClassSerializer
                           )
 
 from rest_framework.views import APIView
@@ -146,7 +147,7 @@ class TermDetailView(generics.RetrieveUpdateDestroyAPIView):
 class ClassYearListCreateView(generics.ListCreateAPIView):
     serializer_class = ClassYearSerializer
     permission_classes = [IsschoolAdmin |IsStudentReadOnly|IsTeacherReadOnly|IsSchoolAdminReadOnly]
-    pagination_class = PageNumberPagination
+    pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend]
 
     def get_queryset(self):
@@ -188,6 +189,7 @@ class ClassroomListCreateView(generics.ListCreateAPIView):
     serializer_class = ClassroomSerializer
     permission_classes = [IsschoolAdmin |IsStudentReadOnly|IsTeacherReadOnly|IsSchoolAdminReadOnly]
     pagination_class = PageNumberPagination
+    # pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
         return Classroom.objects.filter(school=self.request.user.school_admin.school)
@@ -209,6 +211,8 @@ class DepartmentListCreateView(generics.ListCreateAPIView):
     """
     serializer_class = DepartmentSerializer
     permission_classes = [IsschoolAdmin |IsStudentReadOnly|IsTeacherReadOnly|IsSchoolAdminReadOnly]
+    pagination_class = PageNumberPagination
+    # pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
         return Department.objects.filter(school=self.request.user.school_admin.school)
@@ -234,6 +238,8 @@ class SubjectListCreateView(generics.ListCreateAPIView):
     """
     serializer_class = SubjectSerializer
     permission_classes = [IsschoolAdmin |IsStudentReadOnly|IsTeacherReadOnly]
+    pagination_class = PageNumberPagination
+    # pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
         """
@@ -278,6 +284,8 @@ class ClassTeacherListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsschoolAdmin]
     filter_backends = [filters.SearchFilter]  # Enable search functionality
     search_fields = ['class_assigned.class_name']  # Allow searching by class name
+    # pagination_class = PageNumberPagination
+    pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
         # Filter by the authenticated school admin's school
@@ -425,6 +433,8 @@ class ClassTeacherListView(generics.ListAPIView):
     """
     serializer_class = ClassTeacherSerializer
     permission_classes = [IsschoolAdmin]
+    # pagination_class = PageNumberPagination
+    pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
         school = self.request.user.school_admin.school
@@ -460,169 +470,190 @@ class DeleteMultipleClassTeachersView(APIView):
 
 
 #===========================================================================================================
+class SubjectClassListCreateView(generics.ListCreateAPIView):
+    """
+    List and create SubjectClass entries.
+    Accessible by School Admins.
+    """
+    serializer_class = SubjectClassSerializer
+    permission_classes = [IsschoolAdmin]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['subject', 'department']  # Exact matching for filtering
+    search_fields = ['subject__name', 'department__name'] 
+    
+    def get_queryset(self):
+        """
+        Returns SubjectClasses only for the authenticated School Admin's school.
+        """
+        return SubjectClass.objects.filter(school=self.request.user.school_admin.school)
+
+    def perform_create(self, serializer):
+        """
+        Ensures that the subject, department, and school belong to the same institution.
+        """
+        school = self.request.user.school_admin.school
+        subject = serializer.validated_data['subject']
+        department = serializer.validated_data.get('department', None)  # Optional
+
+        # Ensure all assigned entities belong to the same school
+        if subject.school != school or (department and department.school != school):
+            raise ValidationError("Subject and department must belong to the same school.")
+
+        serializer.save(school=school)
+
+
+class SubjectClassDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve, update, or delete a specific SubjectClass mapping.
+    Accessible by School Admins.
+    """
+    serializer_class = SubjectClassSerializer
+    permission_classes = [IsschoolAdmin]
+    lookup_field = 'subject_class_id'  # Ensure it matches the URL param
+
+    def get_queryset(self):
+        """
+        Returns only SubjectClass mappings for the authenticated School Admin's school.
+        """
+        return SubjectClass.objects.filter(school=self.request.user.school_admin.school)
+
+    def perform_update(self, serializer):
+        """
+        Ensures that the updated subject, class, and department belong to the same school.
+        """
+        school = self.request.user.school_admin.school
+        subject = serializer.validated_data.get('subject', serializer.instance.subject)
+        department = serializer.validated_data.get('department', serializer.instance.department)
+
+        if any(obj.school != school for obj in [subject, department] if obj is not None):
+            raise ValidationError("Subject and department must belong to the same school.")
+
+        serializer.save(school=school)
+
+#################################################################################################################
+class ClassDepartmentListCreateView(generics.ListCreateAPIView):
+    serializer_class = ClassDepartmentSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['classes', 'department']
+    search_fields = ['classes__arm_name', 'department__name']
+
+    def get_queryset(self):
+        return ClassDepartment.objects.filter(school=self.request.user.school_admin.school)
+    
+    def perform_create(self, serializer):
+        school = self.request.user.school_admin.school
+        classes = serializer.validated_data['classes']
+        department = serializer.validated_data.get('department', None)
+
+        if department and department.school != school:
+            raise ValidationError("Department must belong to the same school.")
+        
+        serializer.save(school=school)
+
+class ClassDepartmentDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = ClassDepartmentSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'subject_class_id'
+
+    def get_queryset(self):
+        return ClassDepartment.objects.filter(school=self.request.user.school_admin.school)
+    
+    def perform_update(self, serializer):
+        school = self.request.user.school_admin.school
+        classes = serializer.validated_data.get('classes', serializer.instance.classes)
+        department = serializer.validated_data.get('department', serializer.instance.department)
+        
+        if department and department.school != school:
+            raise ValidationError("Department must belong to the same school.")
+
+        serializer.save(school=school)
+
+#################################################################################################################
+# from rest_framework import generics, filters
+# from rest_framework.exceptions import ValidationError
+# from django_filters.rest_framework import DjangoFilterBackend
+# from user_registration.models import TeacherAssignment
+# from user_registration.serializers import TeacherAssignmentSerializer
+# from user_registration.permissions import IsschoolAdmin
+
 
 class TeacherAssignmentListCreateView(generics.ListCreateAPIView):
     """
-    List and create teacher assignments.
+    API to list and create teacher assignments.
+    Accessible by School Admins.
     """
     serializer_class = TeacherAssignmentSerializer
     permission_classes = [IsschoolAdmin]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['teacher', 'subject', 'class_assigned', 'school']
-    search_fields = ['teacher.first_name', 'teacher.last_name', 'subject.name', 'class_assigned.arm_name']
+    search_fields = ['teacher.first_name', 'teacher.last_name', 'subject.subject.name', 'class_assigned.arm_name', 'subject.department.name']
 
     def get_queryset(self):
-        # Filter assignments by the school of the authenticated School Admin
+        """
+        Returns assignments only for the authenticated School Admin's school.
+        """
         return TeacherAssignment.objects.filter(school=self.request.user.school_admin.school)
 
     def perform_create(self, serializer):
-        # Automatically associate the assignment with the school of the School Admin
+        """
+        Ensures that the teacher, subject, and class belong to the same school.
+        """
         school = self.request.user.school_admin.school
         teacher = serializer.validated_data['teacher']
         subject = serializer.validated_data['subject']
         class_assigned = serializer.validated_data['class_assigned']
 
-        # Validate that teacher, subject, and class belong to the same school
-        if teacher.school != school or subject.school != school or class_assigned.school != school:
+        if any(obj.school != school for obj in [teacher, subject, class_assigned]):
             raise ValidationError("Teacher, subject, and class must belong to the same school.")
 
         serializer.save(school=school)
 
 
-class BulkTeacherAssignmentCreateView(APIView):
-    """
-    Bulk assign multiple teachers to multiple subjects and classes.
-    Accessible only by School Admins.
-    """
-    permission_classes = [IsschoolAdmin]
-
-    def post(self, request, *args, **kwargs):
-        """
-        Assign multiple teachers to subjects and classes.
-        Expected Request Body:
-        {
-            "assignments": [
-                {"teacher_id": "teacher_uuid1", "subject_id": "subject_uuid1", "class_id": "class_uuid1"},
-                {"teacher_id": "teacher_uuid2", "subject_id": "subject_uuid2", "class_id": "class_uuid2"}
-            ]
-        }
-        """
-        assignments = request.data.get("assignments", [])
-        if not assignments:
-            return Response({"error": "Assignments list cannot be empty."}, status=status.HTTP_400_BAD_REQUEST)
-
-        school = request.user.school_admin.school
-        created_assignments = []
-        errors = []
-
-        # Extract unique teacher IDs, subject IDs, and class IDs
-        teacher_ids = {a["teacher_id"] for a in assignments}
-        subject_ids = {a["subject_id"] for a in assignments}
-        class_ids = {a["class_id"] for a in assignments}
-
-        print(f"Authenticated School Admin: {request.user.username}, School ID: {school.id}")
-
-        # Fetch teachers, subjects, and classes in one query
-        teachers = {t.teacher_id: t for t in Teacher.objects.filter(teacher_id__in=teacher_ids, school=school)}
-        subjects = {s.subject_id: s for s in Subject.objects.filter(subject_id__in=subject_ids, school=school)}
-        classes = {c.class_id: c for c in Class.objects.filter(class_id__in=class_ids, school=school)}
-
-        print(f"🔎 Found Teachers: {teachers.keys()}")
-        print(f"🔎 Found Subjects: {subjects.keys()}")
-        print(f"🔎 Found Classes: {classes.keys()}")
-
-        # Fetch existing assignments to avoid duplicates
-        existing_assignments = {
-            (ta.teacher.teacher_id, ta.subject.subject_id, ta.class_assigned.class_id)
-            for ta in TeacherAssignment.objects.filter(
-                teacher__in=teachers.values(),
-                subject__in=subjects.values(),
-                class_assigned__in=classes.values(),
-            )
-        }
-        print(f"📌 Existing Assignments: {existing_assignments}")
-
-        with transaction.atomic():
-            for assignment in assignments:
-                teacher_id = assignment.get("teacher_id")
-                subject_id = assignment.get("subject_id")
-                class_id = assignment.get("class_id")
-
-                teacher = teachers.get(teacher_id)
-                subject = subjects.get(subject_id)
-                class_assigned = classes.get(class_id)
-
-                print(f"🔍 Checking Assignment: Teacher {teacher_id} -> Subject {subject_id} -> Class {class_id}")
-
-                if not teacher:
-                    errors.append({"teacher_id": teacher_id, "error": "Teacher not found in this school."})
-                    continue
-                if not subject:
-                    errors.append({"subject_id": subject_id, "error": "Subject not found in this school."})
-                    continue
-                if not class_assigned:
-                    errors.append({"class_id": class_id, "error": "Class not found in this school."})
-                    continue
-
-                if (teacher_id, subject_id, class_id) in existing_assignments:
-                    errors.append({"teacher_id": teacher_id, "subject_id": subject_id, "class_id": class_id, "error": "Already assigned."})
-                    continue
-
-                # Create new assignment
-                teacher_assignment = TeacherAssignment.objects.create(
-                    teacher=teacher,
-                    subject=subject,
-                    class_assigned=class_assigned,
-                    school=school
-                )
-
-                print(f"✅ SUCCESS: Assigned {teacher.user.first_name} {teacher.user.last_name} -> {subject.name} -> {class_assigned.arm_name}")
-
-                created_assignments.append({
-                    "teacher_subject_id": teacher_assignment.teacher_subject_id,
-                    "teacher_id": teacher.teacher_id,
-                    "teacher_name": f"{teacher.user.first_name} {teacher.user.last_name}",
-                    "subject_id": subject.subject_id,
-                    "subject_name": subject.name,
-                    "class_id": class_assigned.class_id,
-                    "class_name": class_assigned.arm_name,
-                    "school_id": school.id,
-                    "school_name": school.school_name
-                })
-
-        response_data = {"message": "Teachers assigned successfully.", "data": created_assignments}
-        if errors:
-            response_data["errors"] = errors  # Include errors if any assignments failed
-
-        print(f"📤 Final Response: {response_data}")
-
-        return Response(response_data, status=status.HTTP_201_CREATED)
-
-
-
 class TeacherAssignmentDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     Retrieve, update, or delete a specific teacher assignment.
+    Accessible by School Admins.
     """
     serializer_class = TeacherAssignmentSerializer
     permission_classes = [IsschoolAdmin]
 
     def get_queryset(self):
-        # Filter assignments by the school of the authenticated School Admin
+        """
+        Returns assignments only for the authenticated School Admin's school.
+        """
         return TeacherAssignment.objects.filter(school=self.request.user.school_admin.school)
 
     def perform_update(self, serializer):
+        """
+        Ensures that updated teacher, subject, and class belong to the same school.
+        """
         school = self.request.user.school_admin.school
         teacher = serializer.validated_data.get('teacher', serializer.instance.teacher)
         subject = serializer.validated_data.get('subject', serializer.instance.subject)
         class_assigned = serializer.validated_data.get('class_assigned', serializer.instance.class_assigned)
 
-        # Validate that teacher, subject, and class belong to the same school
-        if teacher.school != school or subject.school != school or class_assigned.school != school:
+        if any(obj.school != school for obj in [teacher, subject, class_assigned]):
             raise ValidationError("Teacher, subject, and class must belong to the same school.")
 
-        serializer.save()
+        serializer.save(school=school)
 
+#####################################################################################################
+# IsSuperAdmin,IsschoolAdmin,ISteacher,ISstudent,IsSuperAdminOrSchoolAdmin,IsClassTeacher,
+# HasValidPinAndSchoolId,IsStudentReadOnly,IsTeacherReadOnly,IsSchoolAdminReadOnly
+
+class StudentClassListCreateView(generics.ListCreateAPIView):
+    queryset = StudentClass.objects.all()
+    serializer_class = StudentClassSerializer
+    permission_classes = [IsschoolAdmin or IsClassTeacher or ISstudent]
+
+class StudentClassDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = StudentClass.objects.all()
+    serializer_class = StudentClassSerializer
+    lookup_field = 'student_class_id'
+    permission_classes = [IsschoolAdmin or IsClassTeacher or ISstudent]
+
+#####################################################################################################
 
 # Create, Read, Update, and Delete for StudentClassAndSubjectAssignment
 class StudentClassAndSubjectAssignmentListCreateView(generics.ListCreateAPIView):
@@ -789,7 +820,7 @@ class MultipleSubjectApprovalView(APIView):
 
         return Response(response, status=status.HTTP_200_OK)
 
-
+#######################################################################################################
 class DayListCreateView(generics.ListCreateAPIView):
     """
     List and create Days for the authenticated School Admin's school.

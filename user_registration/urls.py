@@ -5,7 +5,7 @@ from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmVie
 from .views import (CustomTokenObtainPairView, RoleListView, SuperAdminRegistrationAPIView,
                     TeacherCreateView,SchoolCreateAPIView,SchoolListAPIView,
                     SchoolDetailAPIView,SuperAdminDetailAPIView,SuperAdminListAPIView,
-                    SubscriptionListCreateAPIView, SubscriptionUpdateAPIView,ComplianceVerificationCreateView,
+                    SubscriptionListView, SubscriptionDetailUpdateView,ComplianceVerificationCreateView,
                     ComplianceVerificationDetailView,ComplianceVerificationListView,MessageListView,MessageCreateView,StudentCreateView,
                     StudentBulkCreateView,GenerateRegistrationPinsView, VerifyRegistrationPinView, StudentSelfRegistrationView,
                     StudentUpdateView, StudentListView, TeacherBulkCreateView,TeacherSelfRegistrationView,TeacherUpdateView,
@@ -37,8 +37,8 @@ urlpatterns = [
     path('schools/<uuid:id>/', SchoolDetailAPIView.as_view(), name='school-detail'),
 
     
-    path('schools/subscriptions/', SubscriptionListCreateAPIView.as_view(), name='subscription-list-create'),
-    path('schools/subscriptions/<uuid:subscription_id>/update/', SubscriptionUpdateAPIView.as_view(), name='subscription-update'),
+    path('schools/subscriptions/', SubscriptionListView.as_view(), name='subscription-list'),
+    path('schools/subscriptions/<uuid:subscription_id>/', SubscriptionDetailUpdateView.as_view(), name='subscription-detail'),
     
     path('compliance-verification/create/', ComplianceVerificationCreateView.as_view(), name='compliance-verification-create'),
     path('compliance-verification/', ComplianceVerificationListView.as_view(), name='compliance-verification-list'),

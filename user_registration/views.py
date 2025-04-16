@@ -12,7 +12,7 @@ from .models import (User,Role, UserRole, SuperAdmin, School,Subscription,
 
 from .serializers import (CustomTokenObtainPairSerializer, SuperAdminCreateSerializer,SuperAdminSerializer,
                            RoleSerializer,TeacherCreateSerializer,SchoolCreateSerializer,SchoolListSerializer,
-                           SubscriptionSerializer, SubscriptionUpdateSerializer,ComplianceVerificationSerializer,
+                           SubscriptionSerializer,ComplianceVerificationSerializer,
                            MessageSerializer,StudentCreateSerializer,StudentUpdateSerializer,
                            StudentListSerializer,TeacherListSerializer,TeacherUpdateSerializer,StudentDetailSerializer,
                            TeacherDetailSerializer,SchoolAdminCreateSerializer,SchoolAdminListSerializer,
@@ -182,10 +182,10 @@ class SchoolListAPIView(ListAPIView):
     queryset = School.objects.all().order_by('school_name')
     serializer_class = SchoolListSerializer
     pagination_class = StandardResultsSetPagination
-    # filter_backends = [DjangoFilterBackend]
-    # filterset_fields = ['city', 'state', 'school_type', 'education_level']
-    # filter_backends = [SearchFilter]
-    # search_fields = ['school_name', 'short_name']
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['city', 'state', 'school_type', 'education_level']
+    filter_backends = [SearchFilter]
+    search_fields = ['school_name', 'short_name']
 
 #views for both update and delete school
 class SchoolDetailAPIView(RetrieveUpdateDestroyAPIView):
@@ -224,31 +224,22 @@ class SchoolDetailAPIView(RetrieveUpdateDestroyAPIView):
             status=status.HTTP_204_NO_CONTENT
         )
 # ========================================================================================================
-class SubscriptionListCreateAPIView(ListCreateAPIView):
-    """
-    API to list all subscriptions and create a new subscription.
-    """
+class SubscriptionListView(generics.ListAPIView):
     queryset = Subscription.objects.all()
     serializer_class = SubscriptionSerializer
     permission_classes = [IsSuperAdmin]
 
-    def perform_create(self, serializer):
-        # Number of students and is_active are auto-calculated in the model's save method
-        serializer.save()
-
-class SubscriptionUpdateAPIView(RetrieveUpdateAPIView):
+class SubscriptionDetailUpdateView(generics.RetrieveUpdateAPIView):
     """
-    API to update the amount_per_student and amount_paid fields of a subscription.
+    GET: View subscription detail with live student count, fee, and status.
+    PATCH: Update amount_per_student and amount_paid only.
     """
     queryset = Subscription.objects.all()
-    serializer_class = SubscriptionUpdateSerializer
+    serializer_class = SubscriptionSerializer
     permission_classes = [IsSuperAdmin]
     lookup_field = 'subscription_id'
+    http_method_names = ['get', 'patch']
 
-    def perform_update(self, serializer):
-        # Ensure calculations are updated based on the new values
-        subscription = serializer.save()
-        subscription.save()  # Trigger the custom save method
 # ========================================================================================================
 class ComplianceVerificationCreateView(generics.CreateAPIView):
     """
@@ -470,60 +461,166 @@ class StudentCreateView(generics.CreateAPIView):
 
 
 
-class StudentBulkCreateView(generics.CreateAPIView):
+# class StudentBulkCreateView(generics.CreateAPIView):
+#     """
+#     Bulk register students from a CSV file (accessible by School Admin).
+#     - Optimized for speed using bulk inserts.
+#     - Ensures data validation before inserting any records.
+#     - Prevents user creation if student data has errors.
+#     """
+#     queryset = Student.objects.all()
+#     permission_classes = [IsschoolAdmin]
+#     parser_classes = [parsers.MultiPartParser]
+
+#     @swagger_auto_schema(
+#         manual_parameters=[
+#             openapi.Parameter(
+#                 'file', openapi.IN_FORM, description="CSV file containing student data", type=openapi.TYPE_FILE
+#             )
+#         ],
+#         responses={
+#             201: openapi.Response('Students registered successfully'),
+#             400: openapi.Response('Bad Request'),
+#         }
+#     )
+#     def post(self, request, *args, **kwargs):
+#         file_obj = request.FILES.get('file')
+#         if not file_obj:
+#             return Response({'error': 'No file uploaded.'}, status=status.HTTP_400_BAD_REQUEST)
+
+#         try:
+#             # Read CSV file using pandas for speed
+#             df = pd.read_csv(file_obj)
+
+#             # Define required fields
+#             required_fields = [
+#                 'username', 'password', 'email', 'first_name', 'last_name', 'admission_number',
+#                 'date_of_birth', 'gender', 'address', 'city', 'state', 'region', 'country',
+#                 'admission_date', 'parent_first_name', 'parent_last_name',
+#                 'parent_occupation', 'parent_contact_info', 'parent_emergency_contact', 'parent_relationship'
+#             ]
+            
+#             # Check for missing fields
+#             missing_fields = set(required_fields) - set(df.columns)
+#             if missing_fields:
+#                 return Response({'error': f'Missing fields in CSV: {", ".join(missing_fields)}'}, status=status.HTTP_400_BAD_REQUEST)
+
+#             school = request.user.school_admin.school  # Fetch once
+#             role = Role.objects.get(name='Student')  # Fetch once
+
+#             # Lists to collect valid records
+#             users, user_roles, students = [], [], []
+#             errors = []
+
+#             for index, row in df.iterrows():
+#                 try:
+#                     # Validate required fields per student
+#                     if not all(row[field] for field in required_fields):
+#                         errors.append({"row": index + 1, "error": "Missing required fields."})
+#                         continue
+
+#                     user = User(
+#                         username=row['username'],
+#                         email=row['email'],
+#                         first_name=row['first_name'],
+#                         last_name=row['last_name']
+#                     )
+#                     user.set_password(row['password'])  # Hash password
+#                     users.append(user)
+                    
+#                 except Exception as e:
+#                     errors.append({"row": index + 1, "error": str(e)})
+
+#             # If any errors were found, return them before creating users
+#             if errors:
+#                 return Response({'errors': errors}, status=status.HTTP_400_BAD_REQUEST)
+
+#             # Bulk create users
+#             created_users = User.objects.bulk_create(users)
+
+#             # Prepare user roles and students
+#             for user, (_, row) in zip(created_users, df.iterrows()):
+#                 user_role = UserRole(user=user, role=role)
+#                 user_roles.append(user_role)
+
+#                 student = Student(
+#                     user=user,
+#                     school=school,
+#                     admission_number=row['admission_number'],
+#                     first_name=row['first_name'],
+#                     last_name=row['last_name'],
+#                     date_of_birth=row['date_of_birth'],
+#                     gender=row['gender'],
+#                     address=row['address'],
+#                     city=row['city'],
+#                     state=row['state'],
+#                     region=row['region'],
+#                     country=row['country'],
+#                     admission_date=row['admission_date'],
+#                     parent_first_name=row['parent_first_name'],
+#                     parent_last_name=row['parent_last_name'],
+#                     parent_occupation=row['parent_occupation'],
+#                     parent_contact_info=row['parent_contact_info'],
+#                     parent_emergency_contact=row['parent_emergency_contact'],
+#                     parent_relationship=row['parent_relationship'],
+#                 )
+#                 students.append(student)
+
+#             # Bulk create user roles and students
+#             with transaction.atomic():
+#                 UserRole.objects.bulk_create(user_roles)
+#                 Student.objects.bulk_create(students)
+
+#             return Response({'message': 'Students registered successfully.'}, status=status.HTTP_201_CREATED)
+
+#         except Exception as e:
+#             return Response({'error': f'Error processing file: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+
+from django.db import transaction
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status, parsers
+import pandas as pd
+from user_registration.models import (
+    User, UserRole, Role, Student, ClassYear, ClassDepartment, StudentClass
+)
+
+
+class StudentBulkCreateView(APIView):
     """
     Bulk register students from a CSV file (accessible by School Admin).
-    - Optimized for speed using bulk inserts.
-    - Ensures data validation before inserting any records.
-    - Prevents user creation if student data has errors.
+    Uses class_year_name and class_arm_name for readability.
     """
-    queryset = Student.objects.all()
-    permission_classes = [IsschoolAdmin]
     parser_classes = [parsers.MultiPartParser]
 
-    @swagger_auto_schema(
-        manual_parameters=[
-            openapi.Parameter(
-                'file', openapi.IN_FORM, description="CSV file containing student data", type=openapi.TYPE_FILE
-            )
-        ],
-        responses={
-            201: openapi.Response('Students registered successfully'),
-            400: openapi.Response('Bad Request'),
-        }
-    )
     def post(self, request, *args, **kwargs):
         file_obj = request.FILES.get('file')
         if not file_obj:
             return Response({'error': 'No file uploaded.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            # Read CSV file using pandas for speed
             df = pd.read_csv(file_obj)
 
-            # Define required fields
             required_fields = [
                 'username', 'password', 'email', 'first_name', 'last_name', 'admission_number',
                 'date_of_birth', 'gender', 'address', 'city', 'state', 'region', 'country',
                 'admission_date', 'parent_first_name', 'parent_last_name',
-                'parent_occupation', 'parent_contact_info', 'parent_emergency_contact', 'parent_relationship'
+                'parent_occupation', 'parent_contact_info', 'parent_emergency_contact',
+                'parent_relationship', 'class_year_name', 'class_arm_name'
             ]
-            
-            # Check for missing fields
+
             missing_fields = set(required_fields) - set(df.columns)
             if missing_fields:
                 return Response({'error': f'Missing fields in CSV: {", ".join(missing_fields)}'}, status=status.HTTP_400_BAD_REQUEST)
 
-            school = request.user.school_admin.school  # Fetch once
-            role = Role.objects.get(name='Student')  # Fetch once
+            school = request.user.school_admin.school
+            student_role = Role.objects.get(name='Student')
 
-            # Lists to collect valid records
-            users, user_roles, students = [], [], []
+            users, user_roles, students, student_classes = [], [], [], []
             errors = []
 
             for index, row in df.iterrows():
                 try:
-                    # Validate required fields per student
                     if not all(row[field] for field in required_fields):
                         errors.append({"row": index + 1, "error": "Missing required fields."})
                         continue
@@ -534,22 +631,18 @@ class StudentBulkCreateView(generics.CreateAPIView):
                         first_name=row['first_name'],
                         last_name=row['last_name']
                     )
-                    user.set_password(row['password'])  # Hash password
+                    user.set_password(row['password'])
                     users.append(user)
-                    
                 except Exception as e:
                     errors.append({"row": index + 1, "error": str(e)})
 
-            # If any errors were found, return them before creating users
             if errors:
                 return Response({'errors': errors}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Bulk create users
             created_users = User.objects.bulk_create(users)
 
-            # Prepare user roles and students
             for user, (_, row) in zip(created_users, df.iterrows()):
-                user_role = UserRole(user=user, role=role)
+                user_role = UserRole(user=user, role=student_role)
                 user_roles.append(user_role)
 
                 student = Student(
@@ -575,16 +668,35 @@ class StudentBulkCreateView(generics.CreateAPIView):
                 )
                 students.append(student)
 
-            # Bulk create user roles and students
+            created_students = []
             with transaction.atomic():
                 UserRole.objects.bulk_create(user_roles)
-                Student.objects.bulk_create(students)
+                created_students = Student.objects.bulk_create(students)
 
-            return Response({'message': 'Students registered successfully.'}, status=status.HTTP_201_CREATED)
+                for student, (_, row) in zip(created_students, df.iterrows()):
+                    class_year = ClassYear.objects.filter(year_name__iexact=row['class_year_name'], school=school).first()
+                    class_arm = ClassDepartment.objects.filter(classes__arm_name__iexact=row['class_arm_name'], school=school).first()
+
+                    if not class_year or not class_arm:
+                        errors.append({"row": index + 1, "error": f"Invalid class year or arm: {row['class_year_name']}, {row['class_arm_name']}"})
+                        continue
+
+                    student_class = StudentClass(
+                        student=student,
+                        class_year=class_year,
+                        class_arm=class_arm
+                    )
+                    student_classes.append(student_class)
+
+                StudentClass.objects.bulk_create(student_classes)
+
+            return Response({
+                'message': 'Students registered successfully.',
+                'errors': errors if errors else None
+            }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
             return Response({'error': f'Error processing file: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 class GenerateRegistrationPinsView(APIView):
@@ -660,14 +772,44 @@ class ListRegistrationPinsView(generics.ListAPIView):
         return Response({"message": "List of registration pins.", "pins": serializer.data}, status=status.HTTP_200_OK)
 
 
+# class StudentSelfRegistrationView(generics.CreateAPIView):
+#     """
+#     Self-registration for students after OTP verification.
+#     """
+#     serializer_class = StudentCreateSerializer
+
+#     def post(self, request, *args, **kwargs):
+#         temp_token = request.data.get('temp_token')
+
+#         if not temp_token:
+#             return Response({'error': 'Temporary token is required.'}, status=400)
+
+#         is_valid, pin = validate_temp_token(temp_token)
+#         if not is_valid:
+#             return Response({'error': 'Invalid or expired temporary token.'}, status=400)
+
+#         serializer = self.get_serializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+
+#         # Mark OTP as used
+#         pin.is_used = True
+#         pin.save()
+
+#         # Create student record
+#         serializer.save(school=pin.school)
+#         return Response(serializer.data, status=201)
+
 class StudentSelfRegistrationView(generics.CreateAPIView):
     """
     Self-registration for students after OTP verification.
+    Automatically assigns the student to class_year and class_arm.
     """
     serializer_class = StudentCreateSerializer
 
     def post(self, request, *args, **kwargs):
         temp_token = request.data.get('temp_token')
+        class_year_name = request.data.get('class_year_name')
+        class_arm_name = request.data.get('class_arm_name')
 
         if not temp_token:
             return Response({'error': 'Temporary token is required.'}, status=400)
@@ -684,16 +826,34 @@ class StudentSelfRegistrationView(generics.CreateAPIView):
         pin.save()
 
         # Create student record
-        serializer.save(school=pin.school)
+        student = serializer.save(school=pin.school)
+
+        # Assign class using provided class_year_name and class_arm_name
+        if not class_year_name or not class_arm_name:
+            return Response({'error': 'class_year_name and class_arm_name are required.'}, status=400)
+
+        class_year = ClassYear.objects.filter(year_name__iexact=class_year_name, school=pin.school).first()
+        class_arm = ClassDepartment.objects.filter(classes__arm_name__iexact=class_arm_name, school=pin.school).first()
+
+        if not class_year or not class_arm:
+            return Response({'error': 'Invalid class_year_name or class_arm_name.'}, status=400)
+
+        StudentClass.objects.create(
+            student=student,
+            class_year=class_year,
+            class_arm=class_arm
+        )
+
         return Response(serializer.data, status=201)
+
 
 class StudentUpdateView(generics.RetrieveUpdateAPIView):
     """
-    Allows a student to view and update their own profile.
+    Allows a student to view and update their own profile, including class assignment.
     """
     queryset = Student.objects.all()
     serializer_class = StudentUpdateSerializer
-    permission_classes = [IsschoolAdmin|ISstudent]
+    permission_classes = [IsschoolAdmin | ISstudent]
 
     def get_object(self):
         # Ensure the student can only access their own record
@@ -702,19 +862,19 @@ class StudentUpdateView(generics.RetrieveUpdateAPIView):
 
 class StudentListView(generics.ListAPIView):
     """
-    Allows School Admin to list all students in their school.
+    Allows School Admin to list all students in their school, with class info.
     """
     queryset = Student.objects.all()
     serializer_class = StudentListSerializer
     permission_classes = [IsschoolAdmin]
     pagination_class = StandardResultsSetPagination
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['first_name', 'middle_name', 'last_name', 'gender']
-    filter_backends = [SearchFilter]
-    search_fields = ['city', 'region','country']
+    search_fields = ['city', 'region', 'country']
+
     def get_queryset(self):
         # Return only students in the School Admin's school
-        return self.queryset.filter(school=self.request.user.schooladmin.school)
+        return self.queryset.filter(school=self.request.user.school_admin.school)
 
 
 class DeleteMultipleStudentsView(APIView):
@@ -731,16 +891,16 @@ class DeleteMultipleStudentsView(APIView):
 
         deleted_count = Student.objects.filter(student_id__in=student_ids).delete()[0]
         return Response({"message": f"{deleted_count} student(s) deleted successfully."}, status=status.HTTP_200_OK)
-    
+
 
 class StudentDetailView(RetrieveAPIView):
     """
-    API to retrieve a single student's details.
+    API to retrieve a single student's details, including class assignment.
     """
     queryset = Student.objects.all()
     serializer_class = StudentDetailSerializer
-    permission_classes = [IsschoolAdmin or ISstudent]  # Only School Admins can access
-    lookup_field = 'pk'  # Allows retrieval by primary key
+    permission_classes = [IsschoolAdmin | ISstudent]
+    lookup_field = 'pk'
 
 
 # ========================================================================================================

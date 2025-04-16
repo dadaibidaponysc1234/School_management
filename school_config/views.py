@@ -28,7 +28,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from user_registration.permissions import (IsSuperAdmin,IsschoolAdmin,ISteacher,
                           ISstudent,IsSuperAdminOrSchoolAdmin,IsClassTeacher,
-                          HasValidPinAndSchoolId,IsStudentReadOnly,IsTeacherReadOnly,IsSchoolAdminReadOnly)
+                          HasValidPinAndSchoolId,IsStudentReadOnly,
+                          IsTeacherReadOnly,IsSchoolAdminReadOnly,SchoolAdminOrIsClassTeacherOrISstudent)
 from rest_framework.generics import (ListAPIView,RetrieveUpdateDestroyAPIView,
                                      ListCreateAPIView,RetrieveUpdateAPIView,DestroyAPIView,
                                      RetrieveAPIView)
@@ -639,19 +640,49 @@ class TeacherAssignmentDetailView(generics.RetrieveUpdateDestroyAPIView):
         serializer.save(school=school)
 
 #####################################################################################################
-# IsSuperAdmin,IsschoolAdmin,ISteacher,ISstudent,IsSuperAdminOrSchoolAdmin,IsClassTeacher,
-# HasValidPinAndSchoolId,IsStudentReadOnly,IsTeacherReadOnly,IsSchoolAdminReadOnly
 
-class StudentClassListCreateView(generics.ListCreateAPIView):
-    queryset = StudentClass.objects.all()
+class StudentClassListView(generics.ListAPIView):
+    """
+    List all student-class assignments.
+    - School Admin: View all students in school.
+    - Class Teacher: View students in their assigned class.
+    - Student: View only their own class.
+    """
     serializer_class = StudentClassSerializer
-    permission_classes = [IsschoolAdmin or IsClassTeacher or ISstudent]
+    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsClassTeacher]
+    # permission_classes = [SchoolAdminOrIsClassTeacherOrISstudent]
 
-class StudentClassDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = StudentClass.objects.all()
+    def get_queryset(self):
+        user = self.request.user
+
+        if hasattr(user, 'school_admin'):
+            school = user.school_admin.school
+            return StudentClass.objects.filter(student__school=school)
+
+        elif hasattr(user, 'teacher'):
+            # Assuming ClassTeacher model exists and links teacher to a class
+            class_ids = user.teacher.assigned_classes.values_list('class_assigned__id', flat=True)
+            return StudentClass.objects.filter(class_arm__classes__id__in=class_ids)
+
+        elif hasattr(user, 'student'):
+            return StudentClass.objects.filter(student=user.student)
+
+        raise ValidationError("Unauthorized access or user role not recognized.")
+
+
+class StudentClassUpdateView(generics.UpdateAPIView):
+    """
+    Update a specific student-class assignment.
+    - Only School Admins can update.
+    """
     serializer_class = StudentClassSerializer
+    permission_classes = [IsschoolAdmin]
     lookup_field = 'student_class_id'
-    permission_classes = [IsschoolAdmin or IsClassTeacher or ISstudent]
+
+    def get_queryset(self):
+        return StudentClass.objects.filter(student__school=self.request.user.school_admin.school)
+
 
 #####################################################################################################
 

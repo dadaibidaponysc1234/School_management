@@ -171,15 +171,20 @@ class TeacherAssignmentSerializer(serializers.ModelSerializer):
 #############################################################################################################
 
 class StudentClassSerializer(serializers.ModelSerializer):
-    student_name = serializers.CharField(source='student.full_name', read_only=True)
+    student_firstname = serializers.CharField(source='student.first_name', read_only=True)
+    student_surname = serializers.CharField(source='student.last_name', read_only=True)
+    student_name = serializers.SerializerMethodField()
     class_name = serializers.CharField(source='class_arm.classes.arm_name', read_only=True)
 
     class Meta:
         model = StudentClass
         fields = [
             'student_class_id', 'student', 'class_year', 'class_arm',
-            'student_name', 'class_name'
+            'student_firstname', 'student_surname', 'student_name', 'class_name'
         ]
+
+    def get_student_name(self, obj):
+        return f"{obj.student.last_name} {obj.student.first_name}"
 
 
 #############################################################################################################

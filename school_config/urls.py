@@ -9,7 +9,7 @@ from .views import (YearListCreateView, YearDetailView, TermListCreateView,
                     SubjectRegistrationControlListView,SubjectApprovalView,MultipleSubjectApprovalView,
                     BulkClassTeacherCreateView,ClassTeacherListView,ClassTeacherUpdateView,DeleteMultipleClassTeachersView,
                     SubjectClassListCreateView, SubjectClassDetailView, ClassDepartmentListCreateView,
-                    ClassDepartmentDetailView, StudentClassListCreateView, StudentClassDetailView
+                    ClassDepartmentDetailView, StudentClassListView, StudentClassUpdateView,
 
                     )
 #BulkTeacherAssignmentCreateView,
@@ -62,9 +62,8 @@ urlpatterns = [
     path('teacher_assignments/', TeacherAssignmentListCreateView.as_view(), name='teacher-assignment-list-create'),
     path('teacher_assignments/<uuid:pk>/', TeacherAssignmentDetailView.as_view(), name='teacher-assignment-detail'),
 ####################################################################################################
-    path('student_classes/', StudentClassListCreateView.as_view(), name='studentclass-list-create'),
-    path('student_classes/<uuid:student_class_id>/', StudentClassDetailView.as_view(), name='studentclass-detail'),
-
+    path('student-classes/', StudentClassListView.as_view(), name='student-class-list'),
+    path('student-classes/<uuid:student_class_id>/update/', StudentClassUpdateView.as_view(), name='student-class-update'),
 ####################################################################################################
      # Student Assignments
     path('subject-registration/', StudentClassAndSubjectAssignmentListCreateView.as_view(), name='student-subject-registration'),

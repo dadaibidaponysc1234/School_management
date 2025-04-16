@@ -9,7 +9,8 @@ from .models import (Role, UserRole, SuperAdmin, School,Subscription,
                      SubjectPeriodLimit,Constraint,AttendancePolicy,FeeCategory,
                      Fee,AssessmentCategory,ExamCategory,ScorePerAssessmentInstance,ExamScore, 
                      ScoreObtainedPerAssessment, ContinuousAssessment,Result,AnnualResult,Notification, 
-                     ClassTeacherComment, Attendance, AttendanceFlag, StudentSubjectAssignment,StudentRegistrationPin)
+                     ClassTeacherComment, Attendance, AttendanceFlag, StudentSubjectAssignment,
+                     StudentRegistrationPin,ClassDepartment, StudentClass)
 
 from django.db import transaction
 
@@ -354,19 +355,32 @@ class SchoolListSerializer(serializers.ModelSerializer):
 # # =================================================================================================
 
 class SubscriptionSerializer(serializers.ModelSerializer):
-    school_name = serializers.CharField(source='school.school_name', read_only=True)  # Add this line
-    class Meta:
-        model = Subscription
-        fields = ['subscription_id','school','school_name','number_students','amount_per_student',
-            'expected_fee','amount_paid','expired_date','active_date','is_active',]
-        read_only_fields = ['subscription_id', 'number_students', 'expected_fee', 'is_active']
+    school_name = serializers.CharField(source='school.school_name', read_only=True)
+    live_number_students = serializers.SerializerMethodField()
+    live_expected_fee = serializers.SerializerMethodField()
+    live_is_active = serializers.SerializerMethodField()
 
-class SubscriptionUpdateSerializer(serializers.ModelSerializer):
-    school_name = serializers.CharField(source='school.school_name', read_only=True)  # Add this line
     class Meta:
         model = Subscription
-        fields = ['subscription_id','school','school_name','number_students','amount_per_student',
-            'expected_fee','amount_paid','expired_date','active_date','is_active',]
+        fields = [
+            'subscription_id', 'school', 'school_name',
+            'amount_per_student', 'amount_paid',
+            'expired_date', 'active_date',
+            'live_number_students', 'live_expected_fee', 'live_is_active',
+        ]
+        read_only_fields = ['school', 'school_name', 'live_number_students', 'live_expected_fee', 'live_is_active']
+
+    def get_live_number_students(self, obj):
+        return obj.school.school_students.count()
+
+    def get_live_expected_fee(self, obj):
+        return self.get_live_number_students(obj) * obj.amount_per_student
+
+    def get_live_is_active(self, obj):
+        from datetime import date
+        today = date.today()
+        return (obj.amount_paid >= self.get_live_expected_fee(obj)) and (today <= obj.expired_date)
+
 
 
 # =================================================================================================
@@ -403,14 +417,58 @@ class RegistrationPinSerializer(serializers.ModelSerializer):
         read_only_fields = ['pin_id', 'school', 'school_name', 'is_used', 'created_at']
 
 
+# class StudentCreateSerializer(serializers.ModelSerializer):
+#     """
+#     Serializer for creating students.
+#     Automatically assigns the 'Student' role.
+#     """
+#     user = UserSerializer()
+#     role = serializers.CharField(source='user_role.role.name', read_only=True)
+#     school = serializers.PrimaryKeyRelatedField(read_only=True)  # Auto-assigned school
+
+#     class Meta:
+#         model = Student
+#         fields = [
+#             'student_id', 'user', 'role', 'school', 'admission_number', 'first_name',
+#             'middle_name', 'last_name', 'date_of_birth', 'gender', 'address', 'city', 'state',
+#             'region', 'country', 'admission_date', 'status', 'profile_picture_path',
+#             'parent_first_name', 'parent_middle_name', 'parent_last_name', 'parent_occupation',
+#             'parent_contact_info', 'parent_emergency_contact', 'parent_relationship'
+#         ]
+#         read_only_fields = ['student_id', 'role', 'school']
+
+#     def create(self, validated_data):
+#         user_data = validated_data.pop('user')
+
+#         try:
+#             with transaction.atomic():
+#                 # Create the user
+#                 user = UserSerializer().create(user_data)
+
+#                 # Retrieve the 'Student' role automatically
+#                 student_role = Role.objects.get(name='Student')
+
+#                 # Assign the Student role automatically
+#                 user_role = UserRole.objects.create(user=user, role=student_role)
+
+#                 # Create the student record
+#                 student = Student.objects.create(user=user, **validated_data)
+
+#                 return student
+
+#         except Exception as e:
+#             raise serializers.ValidationError({"error": f"Student creation failed: {str(e)}"})
+
 class StudentCreateSerializer(serializers.ModelSerializer):
     """
     Serializer for creating students.
-    Automatically assigns the 'Student' role.
+    Automatically assigns the 'Student' role and assigns them to a class.
     """
     user = UserSerializer()
     role = serializers.CharField(source='user_role.role.name', read_only=True)
-    school = serializers.PrimaryKeyRelatedField(read_only=True)  # Auto-assigned school
+    school = serializers.PrimaryKeyRelatedField(read_only=True)
+    class_year = serializers.UUIDField(write_only=True)
+    class_arm = serializers.UUIDField(write_only=True)
 
     class Meta:
         model = Student
@@ -419,26 +477,27 @@ class StudentCreateSerializer(serializers.ModelSerializer):
             'middle_name', 'last_name', 'date_of_birth', 'gender', 'address', 'city', 'state',
             'region', 'country', 'admission_date', 'status', 'profile_picture_path',
             'parent_first_name', 'parent_middle_name', 'parent_last_name', 'parent_occupation',
-            'parent_contact_info', 'parent_emergency_contact', 'parent_relationship'
+            'parent_contact_info', 'parent_emergency_contact', 'parent_relationship',
+            'class_year', 'class_arm'
         ]
         read_only_fields = ['student_id', 'role', 'school']
 
     def create(self, validated_data):
         user_data = validated_data.pop('user')
+        class_year_id = validated_data.pop('class_year')
+        class_arm_id = validated_data.pop('class_arm')
 
         try:
             with transaction.atomic():
-                # Create the user
                 user = UserSerializer().create(user_data)
-
-                # Retrieve the 'Student' role automatically
                 student_role = Role.objects.get(name='Student')
-
-                # Assign the Student role automatically
                 user_role = UserRole.objects.create(user=user, role=student_role)
-
-                # Create the student record
                 student = Student.objects.create(user=user, **validated_data)
+
+                # Assign class to student
+                class_year = ClassYear.objects.get(class_year_id=class_year_id)
+                class_arm = ClassDepartment.objects.get(subject_class_id=class_arm_id)
+                StudentClass.objects.create(student=student, class_year=class_year, class_arm=class_arm)
 
                 return student
 
@@ -446,14 +505,47 @@ class StudentCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"error": f"Student creation failed: {str(e)}"})
 
 
+# class StudentUpdateSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Student
+#         fields = [
+#             'first_name', 'middle_name', 'last_name', 'date_of_birth',
+#             'gender', 'address', 'city', 'state', 'region', 'country',
+#             'profile_picture_path'
+#         ]
+
+# class StudentListSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Student
+#         fields = [
+#             'student_id', 'admission_number', 'first_name', 'last_name',
+#              'status', 'parent_contact_info'
+#         ]
+
+# class StudentDetailSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Student
+#         fields = [
+#             'student_id', 'user', 'school', 'admission_number', 'first_name', 
+#             'middle_name', 'last_name', 'date_of_birth', 'gender', 'address', 
+#             'city', 'state', 'region', 'country', 'admission_date', 'status', 
+#             'profile_picture_path', 'parent_first_name', 
+#             'parent_middle_name', 'parent_last_name', 'parent_occupation', 
+#             'parent_contact_info', 'parent_emergency_contact', 'parent_relationship'
+#         ]
+
 class StudentUpdateSerializer(serializers.ModelSerializer):
+    class_year_name = serializers.CharField(write_only=True, required=False)
+    class_arm_name = serializers.CharField(write_only=True, required=False)
+
     class Meta:
         model = Student
         fields = [
             'first_name', 'middle_name', 'last_name', 'date_of_birth',
             'gender', 'address', 'city', 'state', 'region', 'country',
-            'profile_picture_path'
+            'profile_picture_path', 'class_year_name', 'class_arm_name'
         ]
+
 
 class StudentListSerializer(serializers.ModelSerializer):
     class Meta:
@@ -463,7 +555,11 @@ class StudentListSerializer(serializers.ModelSerializer):
              'status', 'parent_contact_info'
         ]
 
+
 class StudentDetailSerializer(serializers.ModelSerializer):
+    class_year = serializers.SerializerMethodField()
+    class_arm = serializers.SerializerMethodField()
+
     class Meta:
         model = Student
         fields = [
@@ -472,8 +568,23 @@ class StudentDetailSerializer(serializers.ModelSerializer):
             'city', 'state', 'region', 'country', 'admission_date', 'status', 
             'profile_picture_path', 'parent_first_name', 
             'parent_middle_name', 'parent_last_name', 'parent_occupation', 
-            'parent_contact_info', 'parent_emergency_contact', 'parent_relationship'
+            'parent_contact_info', 'parent_emergency_contact', 'parent_relationship',
+            'class_year', 'class_arm'
         ]
+
+    def get_class_year(self, obj):
+        try:
+            student_class = obj.subject_class.first()
+            return student_class.class_year.name if student_class else None
+        except:
+            return None
+
+    def get_class_arm(self, obj):
+        try:
+            student_class = obj.subject_class.first()
+            return student_class.class_arm.classes.arm_name if student_class else None
+        except:
+            return None
 
 
 

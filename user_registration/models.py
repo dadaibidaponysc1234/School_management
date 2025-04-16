@@ -79,27 +79,38 @@ class Subscription(models.Model):
     Represents school subscriptions to the platform.
     """
     subscription_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="subscriptions")
-    number_students = models.IntegerField()
+    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="school_subscriptions")
+    number_students = models.IntegerField(default=0)  # Still stored, but not relied on
     amount_per_student = models.FloatField()
-    expected_fee = models.FloatField()
+    expected_fee = models.FloatField(default=0.0)     # Still stored, but not relied on
     amount_paid = models.FloatField()
     expired_date = models.DateField()
     active_date = models.DateField()
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=False)    # Still stored, but not relied on
 
     def save(self, *args, **kwargs):
-        # Automatically calculate number_students and expected_fee
-        if self.school.students:
-            self.number_students = self.school.students.count()
+        # Keep old behavior for POST/PUT, but dynamic logic will be used on GET
+        if self.school and self.school.school_students.exists():
+            self.number_students = self.school.school_students.count()
         else:
-            self.number_students = 1
+            self.number_students = 0
         self.expected_fee = self.number_students * self.amount_per_student
-
-        # Automatically set is_active based on payment status
         today = date.today()
         self.is_active = (self.amount_paid >= self.expected_fee) and (today <= self.expired_date)
         super().save(*args, **kwargs)
+
+    @property
+    def live_number_students(self):
+        return self.school.school_students.count() if self.school else 0
+
+    @property
+    def live_expected_fee(self):
+        return self.live_number_students * self.amount_per_student
+
+    @property
+    def live_is_active(self):
+        today = date.today()
+        return (self.amount_paid >= self.live_expected_fee) and (today <= self.expired_date)
 
     def __str__(self):
         return f"Subscription for {self.school.school_name}"
@@ -256,7 +267,7 @@ class Student(models.Model):
     """
     student_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="student")
-    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="students")
+    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="school_students")
     admission_number = models.IntegerField( verbose_name="Admission Number",
                                            help_text="Unique number assigned to the student upon admission")
     first_name = models.CharField(max_length=50)
@@ -407,8 +418,11 @@ class StudentClass(models.Model):
     class_year = models.ForeignKey('ClassYear', on_delete=models.CASCADE, related_name="subject_class")
     class_arm = models.ForeignKey('ClassDepartment', on_delete=models.CASCADE, related_name="subject_class")
 
+    class Meta:
+        unique_together = ('student', 'class_year','class_arm')  # Optional: Prevent same student being assigned multiple times to same year
+        
     def __str__(self):
-        return f"{self.student.surname} {self.class_arm.classes.arm_name}"
+        return f" {self.class_arm.classes.arm_name} {self.student.last_name}"
 
 
 class SubjectRegistrationControl(models.Model):

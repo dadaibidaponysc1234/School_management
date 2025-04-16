@@ -505,46 +505,47 @@ class StudentCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"error": f"Student creation failed: {str(e)}"})
 
 
-# class StudentUpdateSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Student
-#         fields = [
-#             'first_name', 'middle_name', 'last_name', 'date_of_birth',
-#             'gender', 'address', 'city', 'state', 'region', 'country',
-#             'profile_picture_path'
-#         ]
-
-# class StudentListSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Student
-#         fields = [
-#             'student_id', 'admission_number', 'first_name', 'last_name',
-#              'status', 'parent_contact_info'
-#         ]
-
-# class StudentDetailSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Student
-#         fields = [
-#             'student_id', 'user', 'school', 'admission_number', 'first_name', 
-#             'middle_name', 'last_name', 'date_of_birth', 'gender', 'address', 
-#             'city', 'state', 'region', 'country', 'admission_date', 'status', 
-#             'profile_picture_path', 'parent_first_name', 
-#             'parent_middle_name', 'parent_last_name', 'parent_occupation', 
-#             'parent_contact_info', 'parent_emergency_contact', 'parent_relationship'
-#         ]
-
 class StudentUpdateSerializer(serializers.ModelSerializer):
-    class_year_name = serializers.CharField(write_only=True, required=False)
-    class_arm_name = serializers.CharField(write_only=True, required=False)
+    user = UserSerializer()
+    role = serializers.CharField(source='user_role.role.name', read_only=True)
+    school = serializers.PrimaryKeyRelatedField(read_only=True)
+    class_year = serializers.UUIDField(write_only=True)
+    class_arm = serializers.UUIDField(write_only=True)
 
     class Meta:
         model = Student
         fields = [
-            'first_name', 'middle_name', 'last_name', 'date_of_birth',
-            'gender', 'address', 'city', 'state', 'region', 'country',
-            'profile_picture_path', 'class_year_name', 'class_arm_name'
+            'student_id', 'user', 'role', 'school', 'admission_number', 'first_name',
+            'middle_name', 'last_name', 'date_of_birth', 'gender', 'address', 'city', 'state',
+            'region', 'country', 'admission_date', 'status', 'profile_picture_path',
+            'parent_first_name', 'parent_middle_name', 'parent_last_name', 'parent_occupation',
+            'parent_contact_info', 'parent_emergency_contact', 'parent_relationship',
+            'class_year', 'class_arm'
         ]
+        read_only_fields = ['student_id', 'role', 'school']
+
+    def update(self, validated_data):
+        user_data = validated_data.pop('user')
+        class_year_id = validated_data.pop('class_year')
+        class_arm_id = validated_data.pop('class_arm')
+
+        try:
+            with transaction.atomic():
+                user = UserSerializer().create(user_data)
+                student_role = Role.objects.get(name='Student')
+                user_role = UserRole.objects.create(user=user, role=student_role)
+                student = Student.objects.create(user=user, **validated_data)
+
+                # Assign class to student
+                class_year = ClassYear.objects.get(class_year_id=class_year_id)
+                class_arm = ClassDepartment.objects.get(subject_class_id=class_arm_id)
+                StudentClass.objects.create(student=student, class_year=class_year, class_arm=class_arm)
+
+                return student
+
+        except Exception as e:
+            raise serializers.ValidationError({"error": f"Student creation failed: {str(e)}"})
+
 
 
 class StudentListSerializer(serializers.ModelSerializer):
@@ -635,9 +636,45 @@ class TeacherCreateSerializer(serializers.ModelSerializer):
 
 
 class TeacherUpdateSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+    role = serializers.CharField(source='user_role.role.name', read_only=True)  # Role is always 'Teacher'
+    school = serializers.PrimaryKeyRelatedField(read_only=True)  # Auto-assigned school
+
     class Meta:
         model = Teacher
-        exclude = ['school']  # Prevent updating the school field
+        fields = [
+            'teacher_id', 'user', 'role', 'school', 'first_name', 'middle_name',
+            'last_name', 'date_of_birth', 'gender', 'address', 'city', 'state', 'region',
+            'country', 'date_hire', 'status', 'qualification', 'specialization',
+            'profile_picture_path', 'cv'
+        ]
+        read_only_fields = ['teacher_id', 'role', 'school']
+
+    def update(self, validated_data):
+        """
+        Handles user creation, role assignment, and teacher creation.
+        Ensures all operations are atomic (transactional).
+        """
+        user_data = validated_data.pop('user')
+        try:
+
+            with transaction.atomic():
+                # Create User
+                user = UserSerializer().create(user_data)
+
+                # Get the 'Teacher' role
+                role = Role.objects.get(name="Teacher")
+
+                # Assign role
+                UserRole.objects.create(user=user, role=role)
+
+                # Create Teacher
+                teacher = Teacher.objects.create(user=user, **validated_data)
+
+                return teacher
+        except Exception as e:
+            raise serializers.ValidationError({"error": f"Teacher creation failed: {str(e)}"})
+
 
 
 class TeacherListSerializer(serializers.ModelSerializer):
@@ -706,9 +743,42 @@ class SchoolAdminUpdateSerializer(serializers.ModelSerializer):
     """
     Serializer for updating a SchoolAdmin.
     """
+    user = UserSerializer()  # Serialize and create the User object
+    role = serializers.CharField(source='user_role.role.name', read_only=True)
+    user_role = serializers.UUIDField(write_only=True)  # Write-only role UUID
+
     class Meta:
         model = SchoolAdmin
-        exclude = ['school']  # Prevent updating the school field
+        fields = [
+            'schooladmin_id', 'user', 'role', 'user_role', 'school', 'surname',
+            'first_name', 'email', 'phone_number', 'address', 'city', 'state',
+            'region', 'country', 'designation', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['schooladmin_id', 'role', 'created_at', 'updated_at']
+
+    def update(self, validated_data):
+        # Extract user data and user_role UUID
+        user_data = validated_data.pop('user')
+        user_role_uuid = validated_data.pop('user_role')
+
+        # Create the User
+        user = UserSerializer().create(user_data)
+
+        # Retrieve the Role object and ensure it is 'School Admin'
+        try:
+            role = Role.objects.get(id=user_role_uuid)
+            if role.name != 'School Admin':
+                raise serializers.ValidationError({"user_role": "The provided role must be 'School Admin'."})
+        except Role.DoesNotExist:
+            raise serializers.ValidationError({"user_role": "Invalid role UUID provided."})
+
+        # Create the UserRole
+        UserRole.objects.create(user=user, role=role)
+
+        # Create the SchoolAdmin with the created user
+        school_admin = SchoolAdmin.objects.create(user=user, **validated_data)
+        return school_admin
+
 
 class SchoolAdminListSerializer(serializers.ModelSerializer):
     """

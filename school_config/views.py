@@ -1,23 +1,18 @@
 from django.shortcuts import render
-from user_registration.models import (User,Role, UserRole, SuperAdmin, School,Subscription,
-                     ComplianceVerification,Message,SchoolAdmin,
-                     Year,Term,ClassYear,Class,Classroom,
-                     Student,Teacher,Department,Subject,ClassTeacher,
-                     TeacherAssignment,Day,Period,
-                     SubjectPeriodLimit,Constraint,AttendancePolicy,FeeCategory,
-                     Fee,AssessmentCategory,ExamCategory,ScorePerAssessmentInstance,ExamScore, 
-                     ScoreObtainedPerAssessment, ContinuousAssessment,Result,AnnualResult,Notification, 
-                     ClassTeacherComment, Attendance, AttendanceFlag, StudentSubjectAssignment, SubjectClass,
-                     StudentRegistrationPin,SubjectRegistrationControl,StudentClassAndSubjectAssignment,
-                     ClassDepartment,StudentClass)
+from user_registration.models import (Year,Term,ClassYear,Class,Classroom,
+                     Teacher,Department,Subject,ClassTeacher,
+                     TeacherAssignment,Day,Period,StudentSubjectRegistration,
+                     SubjectPeriodLimit,Constraint,SubjectClass,ClassDepartment,StudentClass)
 
 
 from .serializers import (YearSerializer,TermSerializer,ClassYearSerializer,
                           ClassSerializer,ClassroomSerializer,DepartmentSerializer,
                           SubjectSerializer,ClassTeacherSerializer,TeacherAssignmentSerializer,
-                          StudentClassAndSubjectAssignmentSerializer, SubjectRegistrationControlSerializer,
+                           StudentSubjectRegistrationSerializer, StudentClassSerializer,
                           DaySerializer,PeriodSerializer,SubjectPeriodLimitSerializer,
-                          ConstraintSerializer,SubjectClassSerializer,ClassDepartmentSerializer,StudentClassSerializer
+                          ConstraintSerializer,SubjectClassSerializer,ClassDepartmentSerializer,
+                          SubjectRegistrationControlUpdateSerializer,SubjectRegistrationControlSerializer,
+                          StudentSubjectStatusUpdateSerializer,
                           )
 
 from rest_framework.views import APIView
@@ -47,6 +42,8 @@ from rest_framework.parsers import MultiPartParser
 from user_registration.utils import generate_temp_token, validate_temp_token
 from django.utils.crypto import get_random_string
 from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied
+from django.utils.timezone import now
 
 
 
@@ -119,7 +116,7 @@ class TermListCreateView(generics.ListCreateAPIView):
     serializer_class = TermSerializer
     permission_classes = [IsschoolAdmin |IsStudentReadOnly|IsTeacherReadOnly|IsSchoolAdminReadOnly]
     pagination_class = StandardResultsSetPagination
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['status', 'year']
 
     def get_queryset(self):
@@ -571,13 +568,6 @@ class ClassDepartmentDetailView(generics.RetrieveUpdateDestroyAPIView):
         serializer.save(school=school)
 
 #################################################################################################################
-# from rest_framework import generics, filters
-# from rest_framework.exceptions import ValidationError
-# from django_filters.rest_framework import DjangoFilterBackend
-# from user_registration.models import TeacherAssignment
-# from user_registration.serializers import TeacherAssignmentSerializer
-# from user_registration.permissions import IsschoolAdmin
-
 
 class TeacherAssignmentListCreateView(generics.ListCreateAPIView):
     """
@@ -650,8 +640,8 @@ class StudentClassListView(generics.ListAPIView):
     """
     serializer_class = StudentClassSerializer
     # permission_classes = [IsAuthenticated]
-    permission_classes = [IsClassTeacher]
-    # permission_classes = [SchoolAdminOrIsClassTeacherOrISstudent]
+    # permission_classes = [IsClassTeacher]
+    permission_classes = [SchoolAdminOrIsClassTeacherOrISstudent]
 
     def get_queryset(self):
         user = self.request.user
@@ -662,8 +652,8 @@ class StudentClassListView(generics.ListAPIView):
 
         elif hasattr(user, 'teacher'):
             # Assuming ClassTeacher model exists and links teacher to a class
-            class_ids = user.teacher.assigned_classes.values_list('class_assigned__id', flat=True)
-            return StudentClass.objects.filter(class_arm__classes__id__in=class_ids)
+            class_ids = user.teacher.assigned_classes.values_list('class_assigned__class_id', flat=True)
+            return StudentClass.objects.filter(class_arm__classes__class_id__in=class_ids)
 
         elif hasattr(user, 'student'):
             return StudentClass.objects.filter(student=user.student)
@@ -677,7 +667,8 @@ class StudentClassUpdateView(generics.UpdateAPIView):
     - Only School Admins can update.
     """
     serializer_class = StudentClassSerializer
-    permission_classes = [IsschoolAdmin]
+    # permission_classes = [IsschoolAdmin]
+    permission_classes = [SchoolAdminOrIsClassTeacherOrISstudent]
     lookup_field = 'student_class_id'
 
     def get_queryset(self):
@@ -686,170 +677,134 @@ class StudentClassUpdateView(generics.UpdateAPIView):
 
 #####################################################################################################
 
-# Create, Read, Update, and Delete for StudentClassAndSubjectAssignment
-class StudentClassAndSubjectAssignmentListCreateView(generics.ListCreateAPIView):
+class StudentSubjectRegistrationListCreateView(generics.ListCreateAPIView):
     """
-    List all assignments for the authenticated student's school or create a new assignment.
+    Allows School Admin, Class Teacher, and Student to create or view subject registrations.
+    School Admins can register any student.
+    Class Teachers can register only students in their class.
+    Students can register only themselves.
     """
-    serializer_class = StudentClassAndSubjectAssignmentSerializer
-    permission_classes = [ISstudent]
+    serializer_class = StudentSubjectRegistrationSerializer
+    permission_classes = [IsAuthenticated & (IsschoolAdmin | ISstudent | IsClassTeacher)]
 
     def get_queryset(self):
-        return StudentClassAndSubjectAssignment.objects.filter(student=self.request.user.student)
+        user = self.request.user
+
+        if hasattr(user, 'school_admin'):
+            return StudentSubjectRegistration.objects.filter(school=user.school_admin.school)
+
+        elif hasattr(user, 'teacher'):
+            teacher = user.teacher
+            student_classes = teacher.assigned_classes.values_list('class_assigned__class_id', flat=True)
+            return StudentSubjectRegistration.objects.filter(student_class__class_arm__classes__in=student_classes)
+
+        elif hasattr(user, 'student'):
+            student = user.student
+            return StudentSubjectRegistration.objects.filter(student_class__student=student)
+
+        return StudentSubjectRegistration.objects.none()
 
     def perform_create(self, serializer):
-        student = self.request.user.student
-        school = student.school
+        user = self.request.user
+        student_class = serializer.validated_data['student_class']
 
-        # Check if registration is open for the school
-        control = SubjectRegistrationControl.objects.filter(school=school).first()
-        if not control or not control.is_open:
-            raise serializers.ValidationError("Subject registration is currently closed.")
+        if hasattr(user, 'school_admin'):
+            serializer.save()
 
-        serializer.save(student=student, school=school)
+        elif hasattr(user, 'teacher'):
+            # Check if teacher is assigned to the class
+            if not user.teacher.assigned_classes.filter(class_assigned=student_class.class_arm.classes).exists():
+                raise PermissionDenied("You can only register students in your assigned classes.")
+            serializer.save()
+
+        elif hasattr(user, 'student'):
+            if student_class.student != user.student:
+                raise PermissionDenied("Students can only register themselves.")
+            serializer.save()
 
 
-class StudentClassAndSubjectAssignmentDetailView(generics.RetrieveUpdateDestroyAPIView):
+class StudentSubjectRegistrationDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
-    Retrieve, update, or delete a specific assignment.
+    View, update, or delete a specific student subject registration.
+    Only School Admins and Class Teachers can update/delete.
+    Students can view only.
     """
-    serializer_class = StudentClassAndSubjectAssignmentSerializer
-    permission_classes = [IsschoolAdmin,ISteacher]
+    serializer_class = StudentSubjectRegistrationSerializer
+    lookup_field = 'registration_id'
+    permission_classes = [IsAuthenticated & (IsschoolAdmin | IsClassTeacher | ISstudent)]
 
     def get_queryset(self):
-        return StudentClassAndSubjectAssignment.objects.filter(student=self.request.user.student)
+        user = self.request.user
+
+        if hasattr(user, 'school_admin'):
+            return StudentSubjectRegistration.objects.filter(school=user.school_admin.school)
+
+        elif hasattr(user, 'teacher'):
+            class_ids = user.teacher.assigned_classes.values_list('class_assigned__id', flat=True)
+            return StudentSubjectRegistration.objects.filter(student_class__class_arm__classes__in=class_ids)
+
+        elif hasattr(user, 'student'):
+            return StudentSubjectRegistration.objects.filter(student_class__student=user.student)
+
+        return StudentSubjectRegistration.objects.none()
+
+    def perform_update(self, serializer):
+        user = self.request.user
+        if hasattr(user, 'student'):
+            raise PermissionDenied("Students are not allowed to update registration status.")
+
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        user = self.request.user
+        if hasattr(user, 'student'):
+            raise PermissionDenied("Students are not allowed to delete registrations.")
+        instance.delete()
 
 
-# Create, Read, Update, and Delete for SubjectRegistrationControl
 class SubjectRegistrationControlView(generics.RetrieveUpdateAPIView):
     """
-    Retrieve or update the registration control for the authenticated school.
+    Allows the School Admin to retrieve or update the subject registration control.
+    Only one instance per school.
     """
-    serializer_class = SubjectRegistrationControlSerializer
-    permission_classes = [IsschoolAdmin]  # Add custom permission to restrict to School Admins
+    permission_classes = [IsschoolAdmin]
 
-    def get_queryset(self):
-        return SubjectRegistrationControl.objects.filter(school=self.request.user.school_admin.school)
+    def get_object(self):
+        # Automatically fetch the registration control for the admin's school
+        return self.request.user.school_admin.school.registration_control
 
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return SubjectRegistrationControlSerializer
+        return SubjectRegistrationControlUpdateSerializer
 
-class SubjectRegistrationControlListView(generics.ListAPIView):
+class UpdateSubjectRegistrationStatusView(generics.UpdateAPIView):
     """
-    List all subject registration controls for the school admin's school.
+    Allows only School Admin or Class Teacher to update status of a registration.
+    Class Teachers can only update students in their assigned classes.
     """
-    serializer_class = SubjectRegistrationControlSerializer
-    permission_classes = [IsschoolAdmin]  # Add custom permission for School Admins
+    queryset = StudentSubjectRegistration.objects.all()
+    serializer_class = StudentSubjectStatusUpdateSerializer
+    permission_classes = [permissions.IsAuthenticated, IsschoolAdmin | IsClassTeacher]
+    lookup_field = 'registration_id'
 
-    def get_queryset(self):
-        return SubjectRegistrationControl.objects.filter(school=self.request.user.school_admin.school)
+    def get_object(self):
+        obj = super().get_object()
 
-# class SubjectApprovalView(generics.UpdateAPIView):
-#     """
-#     Allow teachers to approve or reject subject registrations.
-#     """
-#     serializer_class = TeacherApprovalSerializer
-#     permission_classes = [permissions.IsAuthenticated]  # Ensure only teachers can approve
+        # If the user is a Class Teacher, check class ownership
+        user = self.request.user
+        if hasattr(user, 'teacher') and not hasattr(user, 'school_admin'):
+            teacher = user.teacher
+            # Fetch all class IDs the teacher is assigned to
+            assigned_class_ids = teacher.assigned_classes.values_list('class_assigned_id', flat=True)
 
-#     def get_queryset(self):
-#         teacher = self.request.user.teacher
-#         return StudentClassAndSubjectAssignment.objects.filter(school=teacher.school, status="Pending")
+            # Get the class assigned to the student
+            student_class = obj.student_class.class_arm.classes
 
-class SubjectApprovalView(APIView):
-    """
-    Approve or reject subject registration for students.
-    Accessible by Class Teachers or School Admins.
-    """
-    permission_classes = [IsClassTeacher]  # Customize with a specific permission for Class Teachers or School Admins
+            if student_class.pk not in assigned_class_ids:
+                raise PermissionDenied("You do not have permission to update this student's subject registration.")
 
-    def post(self, request, *args, **kwargs):
-        """
-        Approve or reject a student's subject registration.
-        """
-        assignment_id = request.data.get('assignment_id')
-        action = request.data.get('action')  # Expected values: 'approve' or 'reject'
-
-        if not assignment_id or action not in ['approve', 'reject']:
-            return Response(
-                {'error': 'Invalid input. Provide assignment_id and action (approve or reject).'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        try:
-            # Fetch the student's assignment
-            assignment = StudentClassAndSubjectAssignment.objects.get(pk=assignment_id)
-
-            # Check if the user is authorized to approve/reject (e.g., Class Teacher or School Admin)
-            if request.user.school_admin.school != assignment.school:
-                return Response({'error': 'You are not authorized to approve/reject this assignment.'}, status=status.HTTP_403_FORBIDDEN)
-
-            # Update the status based on the action
-            assignment.status = 'Approved' if action == 'approve' else 'Rejected'
-            assignment.save()
-
-            return Response(
-                {'message': f'Subject registration {action}d successfully.', 'assignment': StudentClassAndSubjectAssignmentSerializer(assignment).data},
-                status=status.HTTP_200_OK
-            )
-        except StudentClassAndSubjectAssignment.DoesNotExist:
-            return Response({'error': 'Assignment not found.'}, status=status.HTTP_404_NOT_FOUND)
-
-
-class MultipleSubjectApprovalView(APIView):
-    """
-    Approve or reject multiple subject registrations for students.
-    Accessible by Class Teachers or School Admins.
-    """
-    permission_classes = [IsClassTeacher]  # Customize for Class Teachers or School Admins
-
-    def post(self, request, *args, **kwargs):
-        """
-        Approve or reject multiple student subject registrations.
-        """
-        data = request.data.get('assignments')  # List of assignments with actions
-
-        if not isinstance(data, list) or not data:
-            return Response(
-                {'error': 'Invalid input. Provide a list of assignments with assignment_id and action (approve/reject).'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        results = []
-        errors = []
-
-        for item in data:
-            assignment_id = item.get('assignment_id')
-            action = item.get('action')
-
-            if not assignment_id or action not in ['approve', 'reject']:
-                errors.append({'assignment_id': assignment_id, 'error': 'Invalid data or action.'})
-                continue
-
-            try:
-                assignment = StudentClassAndSubjectAssignment.objects.get(pk=assignment_id)
-
-                # Check if the user is authorized to approve/reject
-                if request.user.school_admin.school != assignment.school:
-                    errors.append({'assignment_id': assignment_id, 'error': 'Not authorized.'})
-                    continue
-
-                # Update the status based on the action
-                assignment.status = 'Approved' if action == 'approve' else 'Rejected'
-                assignment.save()
-
-                results.append({
-                    'assignment_id': assignment_id,
-                    'status': assignment.status,
-                    'assignment': StudentClassAndSubjectAssignmentSerializer(assignment).data
-                })
-
-            except StudentClassAndSubjectAssignment.DoesNotExist:
-                errors.append({'assignment_id': assignment_id, 'error': 'Assignment not found.'})
-
-        response = {
-            'results': results,
-            'errors': errors
-        }
-
-        return Response(response, status=status.HTTP_200_OK)
+        return obj
 
 #######################################################################################################
 class DayListCreateView(generics.ListCreateAPIView):

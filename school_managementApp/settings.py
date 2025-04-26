@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'timetable',
     'notification',
     'Allstat',
+    'result',
 ]
 
 MIDDLEWARE = [

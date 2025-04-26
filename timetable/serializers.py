@@ -1,17 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from user_registration.models import (Role, UserRole, SuperAdmin, School,Subscription,
-                     ComplianceVerification,Message,SchoolAdmin,
-                     Year,Term,ClassYear,Class,Classroom,
-                     Student,Teacher,Department,Subject,ClassTeacher,
-                     SubjectRegistrationControl,TeacherAssignment,Day,Period,
-                     SubjectPeriodLimit,Constraint,AttendancePolicy,FeeCategory,
-                     Fee,AssessmentCategory,ExamCategory,ScorePerAssessmentInstance,ExamScore, 
-                     ScoreObtainedPerAssessment, ContinuousAssessment,Result,AnnualResult,Notification, 
-                     ClassTeacherComment, Attendance, AttendanceFlag, StudentSubjectAssignment,
-                     StudentRegistrationPin,StudentClassAndSubjectAssignment,Timetable,ClassTimetable,
-                     TeacherTimetable
-                     )
+from user_registration.models import (Class,Teacher,Timetable,ClassTimetable,TeacherTimetable)
 
 class TimetableSerializer(serializers.ModelSerializer):
     class Meta:

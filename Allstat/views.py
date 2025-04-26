@@ -1,15 +1,5 @@
 from django.shortcuts import render
-from user_registration.models import (User,Role, UserRole, SuperAdmin, School,Subscription,
-                     ComplianceVerification,Message,SchoolAdmin,
-                     Year,Term,ClassYear,Class,Classroom,
-                     Student,Teacher,Department,Subject,ClassTeacher,
-                     TeacherAssignment,Day,Period,
-                     SubjectPeriodLimit,Constraint,AttendancePolicy,FeeCategory,
-                     Fee,AssessmentCategory,ExamCategory,ScorePerAssessmentInstance,ExamScore, 
-                     ScoreObtainedPerAssessment, ContinuousAssessment,Result,AnnualResult,Notification, 
-                     ClassTeacherComment, Attendance, AttendanceFlag, StudentSubjectAssignment, SubjectClass,
-                     StudentRegistrationPin,SubjectRegistrationControl,StudentClassAndSubjectAssignment,
-                     ClassDepartment)
+from user_registration.models import (Student,Teacher)
 
 
 from rest_framework.views import APIView

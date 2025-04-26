@@ -6,6 +6,7 @@ import uuid
 from datetime import date, timedelta
 from django.conf import settings
 from django.utils.timezone import now
+from rest_framework.exceptions import ValidationError
 
 
 class Role(models.Model):
@@ -438,170 +439,168 @@ class SubjectRegistrationControl(models.Model):
         return f"Subject Registration - {self.school.school_name}"
 
 
-class StudentClassAndSubjectAssignment(models.Model):
-    """
-    Tracks student class and subject assignments.
-    """
-    assignment_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name="class_and_subject_assignments")
-    class_arm = models.ForeignKey('Class', on_delete=models.CASCADE, related_name="class_arm_assignments")
-    term = models.ForeignKey('Term', on_delete=models.CASCADE, related_name="student_assignments")
-    year = models.ForeignKey('Year', on_delete=models.CASCADE, related_name="student_assignments")
-    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="student_assignments")
-    subjects = models.ManyToManyField('Subject', related_name="student_subject_assignments")
-    assignment_date = models.DateTimeField(auto_now_add=True)
+# models.py (snippet for StudentSubjectRegistration)
+class StudentSubjectRegistration(models.Model):
+    registration_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    student_class = models.ForeignKey('StudentClass', on_delete=models.CASCADE, related_name="subject_registrations")
+    subject_class = models.ForeignKey('SubjectClass', on_delete=models.CASCADE, related_name="subject_registrations")
+    term = models.ForeignKey('Term', on_delete=models.CASCADE, related_name="subject_registrations")
+    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="subject_registrations", null=True, blank=True)
+
+    # Class history snapshot at the time of registration
+    class_year_name = models.CharField(max_length=100,null=True, blank=True)
+    class_arm_name = models.CharField(max_length=100,null=True, blank=True)
+
     status = models.CharField(
         max_length=20,
-        choices=[('Pending', 'Pending'), ('Approved', 'Approved'), ('Rejected', 'Rejected')],
+        choices=[
+            ('Pending', 'Pending'),
+            ('Approved', 'Approved'),
+            ('Rejected', 'Rejected')
+        ],
         default='Pending'
     )
 
-    def __str__(self):
-        return f"Assignment for {self.student.first_name} {self.student.last_name}"
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        unique_together = ('student_class', 'subject_class', 'term')
+        verbose_name = "Student Subject Registration"
+        verbose_name_plural = "Student Subject Registrations"
+
+    def save(self, *args, **kwargs):
+        if self.student_class:
+            self.class_year_name = self.student_class.class_year.class_name
+            self.class_arm_name = self.student_class.class_arm.classes.arm_name
+        if self.student_class and not self.school:
+            self.school = self.student_class.student.school
+
+        if not self.term and self.school:
+            active_term = Term.objects.filter(school=self.school, status=True).first()
+            if not active_term:
+                raise ValidationError("No active term found for this school.")
+            self.term = active_term
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.student_class.student.last_name} - {self.subject_class.subject.name} ({self.term.name})"
+    
+################ RESULT MODULE ##################
+class ResultVisibilityControl(models.Model):
+    school = models.OneToOneField('School', on_delete=models.CASCADE, related_name='result_visibility_control')
+    term_result_open = models.BooleanField(default=False)
+    annual_result_open = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"VisibilityControl - {self.school.school_name} | Term: {self.term_result_open}, Annual: {self.annual_result_open}"
 
 class AssessmentCategory(models.Model):
-    """
-    Represents types of assessments (e.g., tests, assignments).
-    """
     assessment_category_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="assessment_categories")
     assessment_name = models.CharField(max_length=50)
     number_of_times = models.IntegerField()
     max_score_per_one = models.IntegerField()
-    max_score = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.assessment_name
+        return f"{self.assessment_name} ({self.school.school_name})"
 
 
-class ExamCategory(models.Model):
-    """
-    Represents exam categories.
-    """
-    assessment_category = models.OneToOneField(AssessmentCategory, on_delete=models.CASCADE, related_name="exam_category")
-    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="exam_categories")
-    exam_name = models.CharField(max_length=50, default="Exam")
-    max_score = models.IntegerField()
+class ResultConfiguration(models.Model):
+    school = models.OneToOneField('School', on_delete=models.CASCADE, related_name='result_configuration')
+    total_ca_score = models.FloatField(default=30)
+    total_exam_score = models.FloatField(default=70)
+    pass_mark = models.FloatField(default=50)  # <== this should be defined
 
     def __str__(self):
-        return self.exam_name
+        return f"ResultConfig for {self.school.school_name}"
+
+
+class AnnualResultWeightConfig(models.Model):
+    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="annual_weights")
+    class_year = models.ForeignKey('ClassYear', on_delete=models.CASCADE)
+    department = models.ForeignKey('Department', on_delete=models.CASCADE)
+
+    first_term_weight = models.FloatField(default=1/3)
+    second_term_weight = models.FloatField(default=1/3)
+    third_term_weight = models.FloatField(default=1/3)
+
+    class Meta:
+        unique_together = ('school', 'class_year', 'department')
+
+    def __str__(self):
+        return f"Annual Weights - {self.class_year.name}/{self.department.name} - {self.school.school_name}"
+
+class GradingSystem(models.Model):
+    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="grading_systems")
+    min_score = models.FloatField()
+    max_score = models.FloatField()
+    grade = models.CharField(max_length=5)
+    remarks = models.CharField(max_length=100, null=True, blank=True)
+
+    class Meta:
+        ordering = ['-max_score']
+
+    def __str__(self):
+        return f"{self.grade} ({self.min_score}-{self.max_score})"
 
 
 class ScorePerAssessmentInstance(models.Model):
-    """
-    Represents scores for individual assessment instances.
-    """
     scoreperassessment_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="assessment_scores")
-    class_assigned = models.ForeignKey('Class', on_delete=models.CASCADE, related_name="assessment_scores")
-    student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name="assessment_scores")
-    subject = models.ForeignKey('Subject', on_delete=models.CASCADE, related_name="assessment_scores")
-    term = models.ForeignKey('Term', on_delete=models.CASCADE, related_name="assessment_scores")
-    year = models.ForeignKey('Year', on_delete=models.CASCADE, related_name="assessment_scores")
-    category = models.ForeignKey(AssessmentCategory, on_delete=models.CASCADE, related_name="scores")
+    registration = models.ForeignKey('StudentSubjectRegistration', on_delete=models.CASCADE, related_name="assessment_scores",null=True)
+    category = models.ForeignKey('AssessmentCategory', on_delete=models.CASCADE, related_name="instance_scores")
     instance_number = models.IntegerField()
     score = models.FloatField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Score for {self.student.first_name} - {self.category.assessment_name}"
-    
-class ExamScore(models.Model):
-    """
-    Represents exam scores for students in a specific subject, term, and year.
-    """
-    examscore_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="exam_scores")
-    class_assigned = models.ForeignKey('Class', on_delete=models.CASCADE, related_name="exam_scores")
-    student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name="exam_scores")
-    subject = models.ForeignKey('Subject', on_delete=models.CASCADE, related_name="exam_scores")
-    term = models.ForeignKey('Term', on_delete=models.CASCADE, related_name="exam_scores")
-    year = models.ForeignKey('Year', on_delete=models.CASCADE, related_name="exam_scores")
-    score = models.FloatField(help_text="Exam score achieved by the student.")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+        return f"{self.registration.student_class.student.last_name} - {self.category.assessment_name} (Instance {self.instance_number})"
 
-    def __str__(self):
-        return f"ExamScore: {self.student.first_name} ({self.subject.name}) - {self.score}"
 
 class ScoreObtainedPerAssessment(models.Model):
     scoreperassessment_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    school = models.ForeignKey(
-        'School',
-        on_delete=models.CASCADE,
-        related_name="obtained_assessment_scores"  # Unique related_name
-    )
-    class_assigned = models.ForeignKey(
-        'Class',
-        on_delete=models.CASCADE,
-        related_name="obtained_assessment_scores"  # Unique related_name
-    )
-    student = models.ForeignKey(
-        'Student',
-        on_delete=models.CASCADE,
-        related_name="obtained_assessment_scores"  # Unique related_name
-    )
-    subject = models.ForeignKey(
-        'Subject',
-        on_delete=models.CASCADE,
-        related_name="obtained_assessment_scores"  # Unique related_name
-    )
-    term = models.ForeignKey(
-        'Term',
-        on_delete=models.CASCADE,
-        related_name="obtained_assessment_scores"  # Unique related_name
-    )
-    year = models.ForeignKey(
-        'Year',
-        on_delete=models.CASCADE,
-        related_name="obtained_assessment_scores"  # Unique related_name
-    )
-    category = models.ForeignKey(
-        'AssessmentCategory',
-        on_delete=models.CASCADE,
-        related_name="total_scores"
-    )
+    registration = models.ForeignKey('StudentSubjectRegistration', on_delete=models.CASCADE, related_name="total_assessment_scores",null=True)
+    category = models.ForeignKey('AssessmentCategory', on_delete=models.CASCADE, related_name="total_scores")
     total_score = models.FloatField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Assessment Score: {self.student.first_name} ({self.subject.name})"
+        return f"{self.registration.student_class.student.last_name} - {self.category.assessment_name}"
+
+
+class ExamScore(models.Model):
+    examscore_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    registration = models.ForeignKey('StudentSubjectRegistration', on_delete=models.CASCADE, related_name="exam_scores",null=True)
+    score = models.FloatField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.registration.student_class.student.last_name} ({self.registration.subject_class.subject.name}) - {self.score}"
+
 
 class ContinuousAssessment(models.Model):
-    """
-    Represents continuous assessment scores for a student.
-    """
     continuous_assessment_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="continuous_assessments")
-    class_assigned = models.ForeignKey('Class', on_delete=models.CASCADE, related_name="continuous_assessments")
-    student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name="continuous_assessments")
-    subject = models.ForeignKey('Subject', on_delete=models.CASCADE, related_name="continuous_assessments")
-    term = models.ForeignKey('Term', on_delete=models.CASCADE, related_name="continuous_assessments")
-    year = models.ForeignKey('Year', on_delete=models.CASCADE, related_name="continuous_assessments")
+    registration = models.ForeignKey('StudentSubjectRegistration', on_delete=models.CASCADE, related_name="continuous_assessments",null=True)
     ca_total = models.FloatField(help_text="Total score from all continuous assessments.")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"CA: {self.student.first_name} ({self.subject.name}) - {self.ca_total}"
+        return f"{self.registration.student_class.student.last_name} ({self.registration.subject_class.subject.name}) - {self.ca_total}"
+
 
 
 class Result(models.Model):
-    """
-    Represents final term results for a student in a subject.
-    """
     result_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="results")
-    class_assigned = models.ForeignKey('Class', on_delete=models.CASCADE, related_name="results")
-    student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name="results")
-    subject = models.ForeignKey('Subject', on_delete=models.CASCADE, related_name="results")
-    term = models.ForeignKey('Term', on_delete=models.CASCADE, related_name="results")
-    year = models.ForeignKey('Year', on_delete=models.CASCADE, related_name="results")
+    registration = models.ForeignKey('StudentSubjectRegistration', on_delete=models.CASCADE, related_name="results", null=True)
     ca_total = models.FloatField()
     exam_score = models.FloatField()
     total_score = models.FloatField()
@@ -611,43 +610,121 @@ class Result(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Result for {self.student.first_name} ({self.subject.name})"
-    
+        return f"{self.registration.student_class.student.last_name} - {self.total_score} ({self.registration.subject_class.subject.name})"
+
 
 class AnnualResult(models.Model):
-    """
-    Represents annual results for a student in a specific subject and class.
-    """
     annual_result_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    class_assigned = models.ForeignKey('Class', on_delete=models.CASCADE, related_name="annual_results")
-    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="annual_results")
-    student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name="annual_results")
-    subject = models.ForeignKey('Subject', on_delete=models.CASCADE, related_name="annual_results")
-    year = models.ForeignKey('Year', on_delete=models.CASCADE, related_name="annual_results")
+    registration = models.ForeignKey('StudentSubjectRegistration', on_delete=models.CASCADE, related_name="annual_results", null=True)
     first_term_score = models.FloatField(null=True, blank=True)
     second_term_score = models.FloatField(null=True, blank=True)
     third_term_score = models.FloatField(null=True, blank=True)
-    annual_average = models.FloatField(null=True, blank=True, help_text="Automatically calculated as the average of term scores.")
-    grade = models.CharField(max_length=10, null=True, blank=True, help_text="Grade assigned, e.g., A, B, C.")
+    annual_average = models.FloatField(null=True, blank=True)
+    grade = models.CharField(max_length=10, null=True, blank=True)
+    remarks = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return f"Annual Result: {self.student.first_name} ({self.subject.name}) - {self.year.year_id}"
-
     def calculate_annual_average(self):
-        """
-        Calculate and return the annual average based on term scores.
-        """
-        scores = [self.first_term_score, self.second_term_score, self.third_term_score]
-        valid_scores = [score for score in scores if score is not None]
-        if valid_scores:
-            self.annual_average = sum(valid_scores) / len(valid_scores)
-            self.save()
+        config = AnnualResultWeightConfig.objects.filter(
+            school=self.registration.school,
+            class_year=self.registration.student_class.class_year,
+            department=self.registration.subject_class.department
+        ).first()
+
+        if config:
+            weighted = (
+                (self.first_term_score or 0) * config.first_term_weight +
+                (self.second_term_score or 0) * config.second_term_weight +
+                (self.third_term_score or 0) * config.third_term_weight
+            )
+        else:
+            valid_scores = [score for score in [self.first_term_score, self.second_term_score, self.third_term_score] if score is not None]
+            weighted = sum(valid_scores) / len(valid_scores) if valid_scores else 0
+
+        self.annual_average = weighted
+        self.save()
         return self.annual_average
 
+    def __str__(self):
+        return f"{self.registration.student_class.student.last_name} ({self.registration.subject_class.subject.name}) - {self.annual_average}"
 
 
+############# END OF RESULT MODULE #################
+
+############# COMMENT MODULE #################
+
+# from django.db import models
+# import uuid
+
+
+# class SkillRatingScale(models.Model):
+#     school = models.ForeignKey('School', on_delete=models.CASCADE, related_name='skill_scales')
+#     name = models.CharField(max_length=100)
+#     value = models.IntegerField(help_text="e.g., 5 for Excellent, 4 for Very Good, etc.")
+
+#     class Meta:
+#         unique_together = ('school', 'name', 'value')
+#         ordering = ['-value']
+
+#     def __str__(self):
+#         return f"{self.name} ({self.value}) - {self.school.short_name}"
+
+
+# class SkillCategory(models.Model):
+#     CATEGORY_CHOICES = [
+#         ('Cognitive', 'Cognitive'),
+#         ('Affective', 'Affective'),
+#         ('Psychomotor', 'Psychomotor')
+#     ]
+#     name = models.CharField(max_length=100)
+#     type = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+#     school = models.ForeignKey('School', on_delete=models.CASCADE, related_name='skill_categories')
+
+#     class Meta:
+#         unique_together = ('school', 'name', 'type')
+
+#     def __str__(self):
+#         return f"{self.name} - {self.type}"
+
+
+# class StudentSkillRating(models.Model):
+#     rating_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+#     student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name='skill_ratings')
+#     term = models.ForeignKey('Term', on_delete=models.CASCADE)
+#     year = models.ForeignKey('Year', on_delete=models.CASCADE)
+#     class_year = models.ForeignKey('ClassYear', on_delete=models.CASCADE)
+#     class_arm = models.ForeignKey('ClassDepartment', on_delete=models.CASCADE)
+#     skill = models.ForeignKey('SkillCategory', on_delete=models.CASCADE)
+#     rating = models.ForeignKey('SkillRatingScale', on_delete=models.SET_NULL, null=True, blank=True)
+#     remarks = models.CharField(max_length=255, null=True, blank=True)
+
+#     class Meta:
+#         unique_together = ('student', 'term', 'skill')
+
+#     def __str__(self):
+#         return f"{self.student.first_name} - {self.skill.name}: {self.rating.name if self.rating else 'Not Rated'}"
+
+
+# class StudentComment(models.Model):
+#     student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name='comments')
+#     term = models.ForeignKey('Term', on_delete=models.CASCADE)
+#     year = models.ForeignKey('Year', on_delete=models.CASCADE)
+#     class_year = models.ForeignKey('ClassYear', on_delete=models.CASCADE)
+#     class_arm = models.ForeignKey('ClassDepartment', on_delete=models.CASCADE)
+#     class_teacher_name = models.CharField(max_length=150)
+#     class_teacher_comment = models.TextField(blank=True, null=True)
+#     head_teacher_comment = models.TextField(blank=True, null=True)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
+
+#     class Meta:
+#         unique_together = ('student', 'term', 'year')
+
+#     def __str__(self):
+#         return f"Comments - {self.student.first_name} {self.student.last_name} ({self.year.name}, {self.term.name})"
+
+############# END OF COMMENT MODULE #################
 
 class Day(models.Model):
     """

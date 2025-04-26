@@ -1,15 +1,11 @@
 from rest_framework import serializers
 
-from user_registration.models import (Role, UserRole, SuperAdmin, School,Subscription,
-                     ComplianceVerification,Message,SchoolAdmin,
-                     Year,Term,ClassYear,Class,Classroom,
-                     Student,Teacher,Department,Subject,ClassTeacher,
+from user_registration.models import ( Year,Term,ClassYear,Class,Classroom,
+                     Department,Subject,ClassTeacher,
                      TeacherAssignment,Day,Period,
-                     SubjectPeriodLimit,Constraint,AttendancePolicy,FeeCategory,
-                     Fee,AssessmentCategory,ExamCategory,ScorePerAssessmentInstance,ExamScore, 
-                     ScoreObtainedPerAssessment, ContinuousAssessment,Result,AnnualResult,Notification, 
-                     ClassTeacherComment, Attendance, AttendanceFlag, StudentSubjectAssignment,StudentClass,
-                     StudentClassAndSubjectAssignment,SubjectRegistrationControl,SubjectClass,ClassDepartment)
+                     SubjectPeriodLimit,Constraint,StudentClass,
+                     SubjectRegistrationControl,SubjectClass,ClassDepartment,
+                     StudentSubjectRegistration, SubjectClass, StudentClass)
 
 
 class YearSerializer(serializers.ModelSerializer):
@@ -174,13 +170,15 @@ class StudentClassSerializer(serializers.ModelSerializer):
     student_firstname = serializers.CharField(source='student.first_name', read_only=True)
     student_surname = serializers.CharField(source='student.last_name', read_only=True)
     student_name = serializers.SerializerMethodField()
+    class_year = serializers.CharField(source='class_year.class_years.class_name', read_only=True)
     class_name = serializers.CharField(source='class_arm.classes.arm_name', read_only=True)
 
     class Meta:
         model = StudentClass
         fields = [
             'student_class_id', 'student', 'class_year', 'class_arm',
-            'student_firstname', 'student_surname', 'student_name', 'class_name'
+            'student_firstname', 'student_surname', 'student_name', 'class_year'
+            ,'class_name'
         ]
 
     def get_student_name(self, obj):
@@ -188,36 +186,106 @@ class StudentClassSerializer(serializers.ModelSerializer):
 
 
 #############################################################################################################
-class StudentClassAndSubjectAssignmentSerializer(serializers.ModelSerializer):
-    """
-    Serializer for student class and subject assignment.
-    """
+# from rest_framework import serializers
+# from user_registration.models import 
+
+
+class StudentSubjectRegistrationSerializer(serializers.ModelSerializer):
+    # Related fields for better readability
+    student_firstname = serializers.CharField(source='student_class.student.first_name', read_only=True)
+    student_surname = serializers.CharField(source='student_class.student.last_name', read_only=True)
+    student_admission_number = serializers.CharField(source='student_class.student.admission_number', read_only=True)
+    class_year = serializers.CharField(source='student_class.class_year.name', read_only=True)
+    class_arm = serializers.CharField(source='student_class.class_arm.classes.arm_name', read_only=True)
+    department = serializers.CharField(source='subject_class.department.name', read_only=True)
+    subject_name = serializers.CharField(source='subject_class.subject.name', read_only=True)
+    term_name = serializers.CharField(source='term.name', read_only=True)
+    school_name = serializers.CharField(source='school.school_name', read_only=True)
+    student_name = serializers.SerializerMethodField()
+
     class Meta:
-        model = StudentClassAndSubjectAssignment
+        model = StudentSubjectRegistration
         fields = [
-            'assignment_id',
-            'student',
-            'class_arm',
-            'term',
-            'year',
-            'school',
-            'subjects',
-            'assignment_date',
-            'status',
+            'registration_id', 'student_class', 'subject_class', 'term', 'school',
+            'status', 'created_at', 'updated_at',
+            'student_firstname', 'student_surname', 'student_admission_number',
+            'student_name', 'class_year', 'class_arm', 'department',
+            'subject_name', 'term_name', 'school_name'
         ]
-        read_only_fields = ['assignment_id', 'assignment_date', 'status']
+        read_only_fields = [
+            'term', 'school', 'created_at', 'updated_at',
+            'student_admission_number', 'student_name', 'class_year',
+            'class_arm', 'department', 'subject_name', 'term_name', 'school_name'
+        ]
+
+    def get_student_name(self, obj):
+        return f"{obj.student_class.student.first_name} {obj.student_class.student.last_name}"
+
+    def validate(self, attrs):
+        """
+        Ensure that the registration control is open and term is active for the student's school.
+        Automatically sets the school and term if not provided.
+        """
+        student_class = attrs.get('student_class')
+        subject_class = attrs.get('subject_class')
+
+        if not student_class:
+            raise serializers.ValidationError("Student class is required.")
+
+        school = student_class.student.school
+        attrs['school'] = school
+
+        # Check if registration is open for the school
+        control = getattr(school, 'registration_control', None)
+        if not control or not control.is_open:
+            raise serializers.ValidationError("Subject registration is currently closed for this school.")
+
+        # Fetch active term
+        active_term = school.terms.filter(status=True).first()
+        if not active_term:
+            raise serializers.ValidationError("No active term found for this school.")
+
+        attrs['term'] = active_term
+
+        return attrs
 
 
 class SubjectRegistrationControlSerializer(serializers.ModelSerializer):
     """
-    Serializer to control subject registration settings.
+    Serializer for reading subject registration control data.
+    """
+    school_name = serializers.CharField(source='school.school_name', read_only=True)
+
+    class Meta:
+        model = SubjectRegistrationControl
+        fields = ['school', 'school_name', 'is_open', 'start_date', 'end_date']
+
+
+class SubjectRegistrationControlUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for updating registration control settings.
     """
     class Meta:
         model = SubjectRegistrationControl
-        fields = ['school', 'is_open', 'start_date', 'end_date']
-        read_only_fields = ['school']
+        fields = ['is_open', 'start_date', 'end_date']
+
+class StudentSubjectStatusUpdateSerializer(serializers.ModelSerializer):
+    """
+    Allows only School Admins or Class Teachers to update the `status` field of a registration.
+    """
+    class Meta:
+        model = StudentSubjectRegistration
+        fields = ['status']
+        read_only_fields = []
+
+    def validate_status(self, value):
+        if value not in ['Pending', 'Approved', 'Rejected']:
+            raise serializers.ValidationError("Status must be Pending, Approved, or Rejected.")
+        return value
 
 
+
+#################################################################################################
 class DaySerializer(serializers.ModelSerializer):
     """
     Serializer for the Day model.

@@ -5,13 +5,18 @@ from .models import (Role, UserRole, SuperAdmin, School,Subscription,
                      Student,Teacher,Department,Subject,ClassTeacher,
                      SubjectRegistrationControl,TeacherAssignment,Day,Period,
                      SubjectPeriodLimit,Constraint,AttendancePolicy,FeeCategory,
-                     Fee,AssessmentCategory,ExamCategory,ScorePerAssessmentInstance,ExamScore, 
+                     Fee,AssessmentCategory,ScorePerAssessmentInstance,ExamScore, 
                      ScoreObtainedPerAssessment, ContinuousAssessment,Result,AnnualResult,Notification, 
                      ClassTeacherComment, Attendance, AttendanceFlag, StudentSubjectAssignment,
-                     StudentRegistrationPin,StudentClassAndSubjectAssignment,Timetable,ClassTimetable,
-                     TeacherTimetable,SubjectClass,ClassDepartment,StudentClass
+                     StudentRegistrationPin,Timetable,ClassTimetable,
+                     TeacherTimetable,SubjectClass,ClassDepartment,StudentClass,
+                    StudentSubjectRegistration,ResultConfiguration, AnnualResultWeightConfig,
+                    GradingSystem,
                      )
-
+# (AssessmentCategory,ResultConfiguration, AnnualResultWeightConfig,
+# GradingSystem,ScorePerAssessmentInstance,ScoreObtainedPerAssessment,
+# ExamScore, ContinuousAssessment,Result, AnnualResult
+# )
 # admin.site.register(CustomUser)
 admin.site.register(Role)
 admin.site.register(UserRole)
@@ -42,7 +47,7 @@ admin.site.register(AttendancePolicy)
 admin.site.register(FeeCategory)
 admin.site.register(Fee)
 admin.site.register(AssessmentCategory)
-admin.site.register(ExamCategory)
+# admin.site.register(ExamCategory)
 admin.site.register(ScorePerAssessmentInstance)
 admin.site.register(ExamScore)
 admin.site.register(ScoreObtainedPerAssessment)
@@ -55,11 +60,14 @@ admin.site.register(Attendance)
 admin.site.register(AttendanceFlag)
 admin.site.register(StudentSubjectAssignment)
 admin.site.register(StudentRegistrationPin)
-admin.site.register(StudentClassAndSubjectAssignment)
+admin.site.register(StudentSubjectRegistration)
 admin.site.register(Timetable)
 admin.site.register(ClassTimetable)
 admin.site.register(TeacherTimetable)
 admin.site.register(SubjectClass)
 admin.site.register(ClassDepartment)
+admin.site.register(ResultConfiguration)
+admin.site.register(AnnualResultWeightConfig)
+admin.site.register(GradingSystem)
 
  

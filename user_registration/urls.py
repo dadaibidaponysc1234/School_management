@@ -40,9 +40,9 @@ urlpatterns = [
     path('schools/subscriptions/', SubscriptionListView.as_view(), name='subscription-list'),
     path('schools/subscriptions/<uuid:subscription_id>/', SubscriptionDetailUpdateView.as_view(), name='subscription-detail'),
     
-    path('compliance-verification/create/', ComplianceVerificationCreateView.as_view(), name='compliance-verification-create'),
-    path('compliance-verification/', ComplianceVerificationListView.as_view(), name='compliance-verification-list'),
-    path('compliance-verification/<uuid:school_id>/', ComplianceVerificationDetailView.as_view(), name='compliance-verification-detail'),
+    path('schools/compliance-verification/create/', ComplianceVerificationCreateView.as_view(), name='compliance-verification-create'),
+    path('schools/compliance-verification/', ComplianceVerificationListView.as_view(), name='compliance-verification-list'),
+    path('schools/compliance-verification/<uuid:school_id>/', ComplianceVerificationDetailView.as_view(), name='compliance-verification-detail'),
     
     path('messages/send/', MessageCreateView.as_view(), name='message-create'),
     path('messages/inbox/', MessageListView.as_view(), name='message-list'),

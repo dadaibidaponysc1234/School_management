@@ -1,14 +1,5 @@
-from user_registration.models import (Role, UserRole, SuperAdmin, School,Subscription,
-                     ComplianceVerification,Message,SchoolAdmin,
-                     Year,Term,ClassYear,Class,Classroom,
-                     Student,Teacher,Department,Subject,ClassTeacher,
-                     SubjectRegistrationControl,TeacherAssignment,Day,Period,
-                     SubjectPeriodLimit,Constraint,AttendancePolicy,FeeCategory,
-                     Fee,AssessmentCategory,ExamCategory,ScorePerAssessmentInstance,ExamScore, 
-                     ScoreObtainedPerAssessment, ContinuousAssessment,Result,AnnualResult,Notification, 
-                     ClassTeacherComment, Attendance, AttendanceFlag, StudentSubjectAssignment,
-                     StudentRegistrationPin,StudentClassAndSubjectAssignment,Timetable,ClassTimetable,
-                     TeacherTimetable
+from user_registration.models import ( School, Class,Teacher,Day,Period,
+                     SubjectPeriodLimit,Constraint,Timetable,ClassTimetable,TeacherTimetable
                      )
 from django.db import transaction
 

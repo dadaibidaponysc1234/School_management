@@ -1,16 +1,12 @@
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import (Role, UserRole, SuperAdmin, School,Subscription,
+from .models import (
+                     Role, UserRole, SuperAdmin, School,Subscription,
                      ComplianceVerification,Message,SchoolAdmin,
-                     Year,Term,ClassYear,Class,Classroom,
-                     Student,Teacher,Department,Subject,ClassTeacher,
-                     SubjectRegistrationControl,TeacherAssignment,Day,Period,
-                     SubjectPeriodLimit,Constraint,AttendancePolicy,FeeCategory,
-                     Fee,AssessmentCategory,ExamCategory,ScorePerAssessmentInstance,ExamScore, 
-                     ScoreObtainedPerAssessment, ContinuousAssessment,Result,AnnualResult,Notification, 
-                     ClassTeacherComment, Attendance, AttendanceFlag, StudentSubjectAssignment,
-                     StudentRegistrationPin,ClassDepartment, StudentClass)
+                     ClassYear,Student,Teacher,StudentRegistrationPin,
+                     ClassDepartment, StudentClass
+                     )
 
 from django.db import transaction
 
@@ -467,8 +463,8 @@ class StudentCreateSerializer(serializers.ModelSerializer):
     user = UserSerializer()
     role = serializers.CharField(source='user_role.role.name', read_only=True)
     school = serializers.PrimaryKeyRelatedField(read_only=True)
-    class_year = serializers.UUIDField(write_only=True)
-    class_arm = serializers.UUIDField(write_only=True)
+    # class_year = serializers.UUIDField(write_only=True)
+    # class_arm = serializers.UUIDField(write_only=True)
 
     class Meta:
         model = Student
@@ -478,7 +474,7 @@ class StudentCreateSerializer(serializers.ModelSerializer):
             'region', 'country', 'admission_date', 'status', 'profile_picture_path',
             'parent_first_name', 'parent_middle_name', 'parent_last_name', 'parent_occupation',
             'parent_contact_info', 'parent_emergency_contact', 'parent_relationship',
-            'class_year', 'class_arm'
+            # 'class_year', 'class_arm'
         ]
         read_only_fields = ['student_id', 'role', 'school']
 

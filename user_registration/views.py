@@ -1,14 +1,9 @@
 from django.shortcuts import render
 from .models import (User,Role, UserRole, SuperAdmin, School,Subscription,
                      ComplianceVerification,Message,SchoolAdmin,
-                     Year,Term,ClassYear,Class,Classroom,
-                     Student,Teacher,Department,Subject,ClassTeacher,
-                     TeacherAssignment,Day,Period,
-                     SubjectPeriodLimit,Constraint,AttendancePolicy,FeeCategory,
-                     Fee,AssessmentCategory,ExamCategory,ScorePerAssessmentInstance,ExamScore, 
-                     ScoreObtainedPerAssessment, ContinuousAssessment,Result,AnnualResult,Notification, 
-                     ClassTeacherComment, Attendance, AttendanceFlag, StudentSubjectAssignment, StudentRegistrationPin,
-                     SubjectRegistrationControl)
+                     ClassYear,Class,Classroom,ClassDepartment, StudentClass,
+                     Student,Teacher,StudentRegistrationPin,
+                     )
 
 from .serializers import (CustomTokenObtainPairSerializer, SuperAdminCreateSerializer,SuperAdminSerializer,
                            RoleSerializer,TeacherCreateSerializer,SchoolCreateSerializer,SchoolListSerializer,
@@ -576,14 +571,14 @@ class StudentCreateView(generics.CreateAPIView):
 #         except Exception as e:
 #             return Response({'error': f'Error processing file: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
 
-from django.db import transaction
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status, parsers
-import pandas as pd
-from user_registration.models import (
-    User, UserRole, Role, Student, ClassYear, ClassDepartment, StudentClass
-)
+# from django.db import transaction
+# from rest_framework.views import APIView
+# from rest_framework.response import Response
+# from rest_framework import status, parsers
+# import pandas as pd
+# from user_registration.models import (
+#     User, UserRole, Role, Student, ClassYear, 
+# )
 
 
 class StudentBulkCreateView(APIView):
@@ -928,6 +923,7 @@ class TeacherBulkCreateView(generics.CreateAPIView):
     queryset = Teacher.objects.all()
     permission_classes = [IsschoolAdmin]
     parser_classes = [parsers.MultiPartParser]
+    # serializer_class = TeacherCreateSerializer
 
     @swagger_auto_schema(
         manual_parameters=[

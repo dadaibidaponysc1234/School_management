@@ -243,6 +243,7 @@ class SuperAdminSerializer(serializers.ModelSerializer):
             'user',
             'surname',
             'first_name',
+            'middle_name',
             'phone_number',
             'address',
             'created_at',
@@ -308,6 +309,7 @@ class SchoolListSerializer(serializers.ModelSerializer):
     Serializer for listing schools.
     """
     registered_by = serializers.SerializerMethodField()  # Declared as SerializerMethodField
+    status = serializers.CharField(source='school_subscriptions.is_active', read_only=True)
 
     class Meta:
         model = School
@@ -326,6 +328,9 @@ class SchoolListSerializer(serializers.ModelSerializer):
             'school_type',
             'education_level',
             'registered_by',
+            'created_at',
+            'status',
+
         ]
 
     def get_registered_by(self, obj):
@@ -706,7 +711,7 @@ class SchoolAdminCreateSerializer(serializers.ModelSerializer):
         model = SchoolAdmin
         fields = [
             'schooladmin_id', 'user', 'role', 'user_role', 'school', 'surname',
-            'first_name', 'email', 'phone_number', 'address', 'city', 'state',
+            'first_name','middle_name', 'email', 'phone_number', 'address', 'city', 'state',
             'region', 'country', 'designation', 'created_at', 'updated_at'
         ]
         read_only_fields = ['schooladmin_id', 'role', 'created_at', 'updated_at']

@@ -42,6 +42,7 @@ class SuperAdmin(models.Model):
     user_role = models.ForeignKey('UserRole', on_delete=models.CASCADE, related_name='super_admins', null=True)
     surname = models.CharField(max_length=100)
     first_name = models.CharField(max_length=100)
+    middle_name = models.CharField(max_length=100, null=True, blank=True)
     phone_number = models.CharField(max_length=15)
     address = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -70,6 +71,7 @@ class School(models.Model):
     school_type = models.CharField(max_length=100)
     education_level = models.CharField(max_length=100)
     registered_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="registered_schools")  # Track user who registered the school
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.school_name

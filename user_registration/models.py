@@ -7,7 +7,7 @@ from datetime import date, timedelta
 from django.conf import settings
 from django.utils.timezone import now
 from rest_framework.exceptions import ValidationError
-
+from django.utils import timezone
 
 class Role(models.Model):
     """

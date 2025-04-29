@@ -206,7 +206,7 @@ class SuperAdminCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SuperAdmin
-        fields = ['id', 'user', 'role', 'user_role', 'surname', 'first_name', 'phone_number', 'address', 'created_at', 'updated_at']
+        fields = ['id', 'user', 'role', 'user_role', 'surname', 'first_name', 'middle_name','phone_number', 'address', 'created_at', 'updated_at']
         read_only_fields = ['id', 'role', 'created_at', 'updated_at']
 
     def create(self, validated_data):

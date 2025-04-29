@@ -156,6 +156,7 @@ class SchoolAdmin(models.Model):
     school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="school_admins")
     surname = models.CharField(max_length=100)
     first_name = models.CharField(max_length=100)
+    middle_name = models.CharField(max_length=100, null=True, blank=True)
     email = models.EmailField()
     phone_number = models.CharField(max_length=15)
     address = models.CharField(max_length=255)

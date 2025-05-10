@@ -7,7 +7,7 @@ from .views import (ResultVisibilityControlListCreateView, ResultVisibilityContr
                     ScorePerAssessmentDetailView,ScoreObtainedPerAssessmentListView,ScoreObtainedPerAssessmentListView,
                     ExamScoreListCreateView, ExamScoreDetailView,ContinuousAssessmentListView,ContinuousAssessmentDetailView,
                     AnnualResultListView, AnnualResultDetailView, ResultListView, ResultDetailView,
-                    FullStudentResultView, BroadsheetView,
+                    FullStudentResultView, BroadsheetView, ClassTeacherCommentListCreateView, ClassTeacherCommentDetailView,
                     )
 
 urlpatterns = [
@@ -43,7 +43,8 @@ urlpatterns = [
     path('result/annual-results/', AnnualResultListView.as_view(), name='annual_result_list'),
     path('result/annual-results/<uuid:annual_result_id>/', AnnualResultDetailView.as_view(), name='annual_result_detail'),
 
-
+    path('result/classteacher-comments/', ClassTeacherCommentListCreateView.as_view(), name='classteacher_comment_list_create'),
+    path('result/classteacher-comments/<uuid:classteacher_comment_id>/', ClassTeacherCommentDetailView.as_view(), name='classteacher_comment_detail'),
 
     path('result/full-student-result/<uuid:student_id>/', FullStudentResultView.as_view(), name='full_student_result'),
     path('result/broadsheet/', BroadsheetView.as_view(), name='broadsheet'),

@@ -44,54 +44,6 @@ class UserSerializer(serializers.ModelSerializer):
         # Create user with hashed password
         return User.objects.create_user(**validated_data)
 
-# ==================================================================================
-
-# class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-#     def validate(self, attrs):
-#         data = super().validate(attrs)
-
-#         # Ensure self.user is valid and active
-#         if not self.user or not self.user.is_active:
-#             raise serializers.ValidationError({"detail": "No active account found with the given credentials"})
-
-#         # Add basic user details
-#         user = self.user
-#         data['id'] = user.id
-#         data['username'] = user.username
-#         data['email'] = user.email
-#         # data['first_name'] = user.first_name
-#         # data['last_name'] = user.last_name
-
-#         # Add roles and user roles
-#         user_roles = UserRole.objects.filter(user=user).select_related('role')
-#         data['user_roles'] = [
-#             {
-#                 'id': user_role.id,
-#                 'role': {
-#                     'id': user_role.role.id,
-#                     'name': user_role.role.name,
-#                     'description': user_role.role.description,
-#                 },
-#             }
-#             for user_role in user_roles
-#         ]
-
-#         # Add additional details for SuperAdmin if the user is a SuperAdmin
-#         try:
-#             super_admin = SuperAdmin.objects.get(user=user)
-#             data['super_admin'] = {
-#                 'id': super_admin.id,
-#                 'surname': super_admin.surname,
-#                 'first_name': super_admin.first_name,
-#                 'phone_number': super_admin.phone_number,
-#                 'address': super_admin.address,
-#                 'created_at': super_admin.created_at,
-#                 'updated_at': super_admin.updated_at,
-#             }
-#         except SuperAdmin.DoesNotExist:
-#             data['super_admin'] = None
-
-#         return data
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):

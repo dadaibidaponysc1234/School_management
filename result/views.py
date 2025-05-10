@@ -1,5 +1,5 @@
 from rest_framework.views import APIView
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, serializers
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from user_registration.models import (Student,ResultVisibilityControl,AssessmentCategory,
@@ -9,13 +9,13 @@ from user_registration.models import (Student,ResultVisibilityControl,Assessment
                                       ScoreObtainedPerAssessment, StudentSubjectRegistration,Term, Year,
                                       ExamScore,ContinuousAssessment,Result,
                                       AnnualResult,ClassTeacher, ResultVisibilityControl, Term, Year,
-                                      ClassYear, ClassDepartment
+                                      ClassYear, ClassDepartment,ClassTeacherComment
                                       )
 from .serializers import (ResultVisibilityControlSerializer,AssessmentCategorySerializer, ResultConfigurationSerializer,
                            AnnualResultWeightConfigSerializer,GradingSystemSerializer,ScorePerAssessmentInstanceSerializer,
                            ScoreObtainedPerAssessmentSerializer,ExamScoreSerializer,ContinuousAssessmentSerializer,
                            ResultSerializer, AnnualResultSerializer,FullAnnualResultSerializer, FullTermResultSerializer,
-                           BroadsheetSerializer,)
+                           BroadsheetSerializer,ClassTeacherCommentSerializer)
 from rest_framework.permissions import IsAuthenticated
 from user_registration.permissions import (IsSuperAdmin,IsschoolAdmin,ISteacher,
                           ISstudent,IsSuperAdminOrSchoolAdmin,IsClassTeacher,
@@ -25,6 +25,7 @@ from .utils import (update_score_obtained_per_assessment,compute_continuous_asse
                     compute_result_for_registration,compute_annual_result, get_full_term_result_data, 
                     get_full_annual_result_data,get_broadsheet_data,export_broadsheet_to_excel)
 from django.shortcuts import get_object_or_404
+from .ai_comment_generator import generate_teacher_comment
 
 
 class ResultVisibilityControlListCreateView(generics.ListCreateAPIView):
@@ -689,6 +690,52 @@ class AnnualResultDetailView(generics.RetrieveAPIView):
         return AnnualResult.objects.all()
 
 #=================================================================================
+class ClassTeacherCommentListCreateView(generics.ListCreateAPIView):
+    serializer_class = ClassTeacherCommentSerializer
+    permission_classes = [permissions.IsAuthenticated, IsClassTeacher]
+
+    def get_queryset(self):
+        user = self.request.user
+        assigned_class = user.classteacher.assigned_class
+        return ClassTeacherComment.objects.filter(
+            classteacher=user.classteacher,
+            term__is_active=True,
+            student__studentclass__class_year=assigned_class
+        )
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        active_term = Term.objects.get(is_active=True)
+        assigned_class = user.classteacher.assigned_class
+
+        student = serializer.validated_data['student']
+        skills = serializer.validated_data.pop('skills', None)
+
+        if not skills:
+            raise serializers.ValidationError({"skills": "This field is required."})
+
+        if student.studentclass.class_year != assigned_class:
+            raise serializers.ValidationError("This student is not in your assigned class.")
+
+        generated_comment = generate_teacher_comment(skills, gender=student.gender)
+
+        serializer.save(
+            classteacher=user.classteacher,
+            school=user.classteacher.school,
+            term=active_term,
+            comment=generated_comment
+        )
+
+
+class ClassTeacherCommentDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = ClassTeacherCommentSerializer
+    permission_classes = [permissions.IsAuthenticated, IsClassTeacher]
+    lookup_field = 'classteacher_comment_id'
+
+    def get_queryset(self):
+        user = self.request.user
+        return ClassTeacherComment.objects.filter(classteacher=user.classteacher, term__is_active=True)
+
 #============================FULL RESULTS=========================================
 
 

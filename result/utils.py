@@ -16,14 +16,6 @@ from io import BytesIO
 from django.http import HttpResponse
 
 
-
-
-
-
-
-
-
-
 def is_result_viewable(school, result_type='term'):
     """
     Check if result (term or annual) is viewable for the given school.

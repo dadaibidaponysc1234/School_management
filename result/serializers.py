@@ -2,7 +2,7 @@ from rest_framework import serializers
 from user_registration.models import (ResultVisibilityControl,AssessmentCategory,ResultConfiguration,
                                       AnnualResultWeightConfig, GradingSystem,ScorePerAssessmentInstance,
                                      ScoreObtainedPerAssessment, ExamScore,Result,ContinuousAssessment,
-                                     AnnualResult 
+                                     AnnualResult, ClassTeacherComment
                                      )
 
 #=========================================================================================
@@ -267,6 +267,20 @@ class AnnualResultSerializer(serializers.ModelSerializer):
             'exam_score': exam_score,
             'assessment_scores': assessment_data
         }
+    
+
+#==========ClassTeacherComment========
+# serializers.py
+
+class ClassTeacherCommentSerializer(serializers.ModelSerializer):
+    skills = serializers.DictField(write_only=True)
+
+    class Meta:
+        model = ClassTeacherComment
+        fields = '__all__'
+        read_only_fields = ['classteacher', 'school', 'term', 'comment']
+
+
 ##########Full Result Serializer###############
 ##########Full Result Serializer###############
 

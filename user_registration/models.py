@@ -653,6 +653,25 @@ class AnnualResult(models.Model):
         return f"{self.registration.student_class.student.last_name} ({self.registration.subject_class.subject.name}) - {self.annual_average}"
 
 
+# models.py
+
+class ClassTeacherComment(models.Model):
+    """
+    Represents comments made by class teachers for specific students.
+    """
+    classteacher_comment_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="class_teacher_comments")
+    classteacher = models.ForeignKey('ClassTeacher', on_delete=models.CASCADE, related_name="comments")
+    term = models.ForeignKey('Term', on_delete=models.CASCADE, related_name="teacher_comments")
+    student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name="teacher_comments")
+    comment = models.TextField(max_length=1000)
+
+    class Meta:
+        unique_together = ('student', 'term', 'school')
+
+    def __str__(self):
+        return f"Comment by {self.classteacher} for {self.student.first_name} {self.student.last_name}"
+
 ############# END OF RESULT MODULE #################
 
 ############# COMMENT MODULE #################
@@ -847,21 +866,6 @@ class Notification(models.Model):
         return self.title
 
 
-class ClassTeacherComment(models.Model):
-    """
-    Represents comments made by class teachers for specific students.
-    """
-    classteacher_comment_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="class_teacher_comments")
-    classteacher = models.ForeignKey('ClassTeacher', on_delete=models.CASCADE, related_name="comments")
-    class_assigned = models.ForeignKey('Class', on_delete=models.CASCADE, related_name="teacher_comments")
-    term = models.ForeignKey('Term', on_delete=models.CASCADE, related_name="teacher_comments")
-    year = models.ForeignKey('Year', on_delete=models.CASCADE, related_name="teacher_comments")
-    student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name="teacher_comments")
-    comment = models.TextField(max_length=1000)
-
-    def __str__(self):
-        return f"Comment by {self.classteacher.teacher.first_name} for {self.student.first_name}"
 
 
 class Attendance(models.Model):

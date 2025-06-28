@@ -1,18 +1,17 @@
 from django.shortcuts import render
 from user_registration.models import (Year,Term,ClassYear,Class,Classroom,
                      Teacher,Department,Subject,ClassTeacher,
-                     TeacherAssignment,Day,Period,StudentSubjectRegistration,
-                     SubjectPeriodLimit,Constraint,SubjectClass,ClassDepartment,StudentClass)
+                     TeacherAssignment,StudentSubjectRegistration,
+                     SubjectClass,ClassDepartment,StudentClass, Day,Period,SubjectPeriodLimit,Constraint)
 
 
 from .serializers import (YearSerializer,TermSerializer,ClassYearSerializer,
                           ClassSerializer,ClassroomSerializer,DepartmentSerializer,
                           SubjectSerializer,ClassTeacherSerializer,TeacherAssignmentSerializer,
                            StudentSubjectRegistrationSerializer, StudentClassSerializer,
-                          DaySerializer,PeriodSerializer,SubjectPeriodLimitSerializer,
-                          ConstraintSerializer,SubjectClassSerializer,ClassDepartmentSerializer,
+                          SubjectClassSerializer,ClassDepartmentSerializer,
                           SubjectRegistrationControlUpdateSerializer,SubjectRegistrationControlSerializer,
-                          StudentSubjectStatusUpdateSerializer,
+                          StudentSubjectStatusUpdateSerializer,DaySerializer,PeriodSerializer,SubjectPeriodLimitSerializer,ConstraintSerializer
                           )
 
 from rest_framework.views import APIView
@@ -837,7 +836,7 @@ class DayDetailView(generics.RetrieveUpdateDestroyAPIView):
 class PeriodListCreateView(generics.ListCreateAPIView):
     """
     List and create Periods for the authenticated School Admin's school.
-    """
+    """ 
     serializer_class = PeriodSerializer
     permission_classes = [IsschoolAdmin]
     pagination_class = StandardResultsSetPagination

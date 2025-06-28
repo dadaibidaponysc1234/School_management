@@ -2,10 +2,10 @@ from rest_framework import serializers
 
 from user_registration.models import ( Year,Term,ClassYear,Class,Classroom,
                      Department,Subject,ClassTeacher,
-                     TeacherAssignment,Day,Period,
-                     SubjectPeriodLimit,Constraint,StudentClass,
+                     TeacherAssignment,StudentClass,
                      SubjectRegistrationControl,SubjectClass,ClassDepartment,
-                     StudentSubjectRegistration, SubjectClass, StudentClass)
+                     StudentSubjectRegistration, SubjectClass, StudentClass,
+                     Day,Period,SubjectPeriodLimit,Constraint)
 
 
 class YearSerializer(serializers.ModelSerializer):

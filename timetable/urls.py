@@ -1,14 +1,8 @@
 from django.urls import path
-from .views import (GenerateTimetableView,ClassArmTimetableView,TeacherTimetableView,
-                    TeacherListView, ClassListView)
-
+from .views import GenerateTimetableView, ClassTimetableView, TeacherTimetableView
 
 urlpatterns = [
-    path('timetable/generate/', GenerateTimetableView.as_view(), name='generate-timetable'),
-    path('timetable/class-arm/', ClassArmTimetableView.as_view(), name='class-arm-timetable'),
-    path('timetable/teacher/', TeacherTimetableView.as_view(), name='teacher-timetable'), 
-
-    path('timetable/teachers/', TeacherListView.as_view(), name='teacher-list'),
-    path('timetable/classes/', ClassListView.as_view(), name='class-list'),
+    path('generate-timetable/', GenerateTimetableView.as_view(), name='generate-timetable'),
+    path('class-timetable/', ClassTimetableView.as_view(), name='class-timetable'),
+    path('teacher-timetable/', TeacherTimetableView.as_view(), name='teacher-timetable'),
 ]
-

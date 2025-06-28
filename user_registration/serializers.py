@@ -260,8 +260,8 @@ class SchoolListSerializer(serializers.ModelSerializer):
     """
     Serializer for listing schools.
     """
-    registered_by = serializers.SerializerMethodField()  # Declared as SerializerMethodField
-    status = serializers.CharField(source='school_subscriptions.is_active', read_only=True)
+    registered_by = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
 
     class Meta:
         model = School
@@ -282,15 +282,10 @@ class SchoolListSerializer(serializers.ModelSerializer):
             'registered_by',
             'created_at',
             'status',
-
         ]
 
     def get_registered_by(self, obj):
-        """
-        Fetch the `surname` and `first_name` of the related `SuperAdmin` or fallback to User.
-        """
         if obj.registered_by:
-            # Access the related SuperAdmin via the User
             super_admin = getattr(obj.registered_by, 'super_admin', None)
             if super_admin:
                 return {
@@ -298,13 +293,19 @@ class SchoolListSerializer(serializers.ModelSerializer):
                     "surname": super_admin.surname,
                     "first_name": super_admin.first_name,
                 }
-            # Fallback to User details if no SuperAdmin is associated
             return {
                 "id": str(obj.registered_by.id),
                 "surname": obj.registered_by.last_name,
                 "first_name": obj.registered_by.first_name,
             }
         return None
+
+    def get_status(self, obj):
+        try:
+            subscription = obj.school_subscriptions.latest('active_date')
+            return subscription.live_is_active
+        except Subscription.DoesNotExist:
+            return None
 # # =================================================================================================
 
 class SubscriptionSerializer(serializers.ModelSerializer):

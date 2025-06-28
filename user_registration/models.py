@@ -117,6 +117,8 @@ class Subscription(models.Model):
 
     def __str__(self):
         return f"Subscription for {self.school.school_name}"
+    class Meta:
+        ordering = ['-active_date']
     
 
 class ComplianceVerification(models.Model):
@@ -413,7 +415,12 @@ class TeacherAssignment(models.Model):
     # availability = models.JSONField(null=True, blank=True)
 
     def __str__(self):
-        return f"{self.teacher.first_name} {self.class_assigned.classes.arm_name} - {self.subject.subject.name} {self.subject.department.name}"
+        teacher_name = self.teacher.first_name if self.teacher else "NoTeacher"
+        class_arm = self.class_assigned.classes.arm_name if self.class_assigned and self.class_assigned.classes else "NoClass"
+        subject_name = self.subject.subject.name if self.subject and self.subject.subject else "NoSubject"
+        dept_name = self.subject.department.name if self.subject and self.subject.department else "NoDept"
+    
+        return f"{teacher_name} {class_arm} - {subject_name} {dept_name}"
 
 
 class StudentClass(models.Model):
@@ -491,6 +498,33 @@ class StudentSubjectRegistration(models.Model):
     def __str__(self):
         return f"{self.student_class.student.last_name} - {self.subject_class.subject.name} ({self.term.name})"
     
+
+
+# class StudentSubjectAssignment(models.Model):
+    # """
+    # Tracks subject assignments for students.
+    # """
+    # assignment_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    # student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name="subject_assignments")
+    # subject = models.ForeignKey('Subject', on_delete=models.CASCADE, related_name="student_assignments")
+    # class_assigned = models.ForeignKey('Class', on_delete=models.CASCADE, related_name="student_subject_assignments")
+    # term = models.ForeignKey('Term', on_delete=models.CASCADE, related_name="student_subject_assignments")
+    # year = models.ForeignKey('Year', on_delete=models.CASCADE, related_name="student_subject_assignments")
+    # school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="student_subject_assignments")
+    # assigned_by = models.ForeignKey('ClassTeacher', on_delete=models.SET_NULL, null=True, related_name="assigned_students")
+    # assignment_date = models.DateTimeField(auto_now_add=True)
+    # status = models.CharField(max_length=20, choices=[
+    #     ('Pending', 'Pending'),
+    #     ('Approved', 'Approved'),
+    #     ('Rejected', 'Rejected')
+    # ], default='Pending')
+    # status_updated_at = models.DateTimeField(null=True, blank=True)
+    # rejection_reason = models.TextField(null=True, blank=True)
+
+    # def __str__(self):
+    #     return f"{self.student.first_name} - {self.subject.name} ({self.status})"
+    # pass
+
 ################ RESULT MODULE ##################
 class ResultVisibilityControl(models.Model):
     school = models.OneToOneField('School', on_delete=models.CASCADE, related_name='result_visibility_control')
@@ -676,127 +710,8 @@ class ClassTeacherComment(models.Model):
 
 ############# COMMENT MODULE #################
 
-# from django.db import models
-# import uuid
-
-
-# class SkillRatingScale(models.Model):
-#     school = models.ForeignKey('School', on_delete=models.CASCADE, related_name='skill_scales')
-#     name = models.CharField(max_length=100)
-#     value = models.IntegerField(help_text="e.g., 5 for Excellent, 4 for Very Good, etc.")
-
-#     class Meta:
-#         unique_together = ('school', 'name', 'value')
-#         ordering = ['-value']
-
-#     def __str__(self):
-#         return f"{self.name} ({self.value}) - {self.school.short_name}"
-
-
-# class SkillCategory(models.Model):
-#     CATEGORY_CHOICES = [
-#         ('Cognitive', 'Cognitive'),
-#         ('Affective', 'Affective'),
-#         ('Psychomotor', 'Psychomotor')
-#     ]
-#     name = models.CharField(max_length=100)
-#     type = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
-#     school = models.ForeignKey('School', on_delete=models.CASCADE, related_name='skill_categories')
-
-#     class Meta:
-#         unique_together = ('school', 'name', 'type')
-
-#     def __str__(self):
-#         return f"{self.name} - {self.type}"
-
-
-# class StudentSkillRating(models.Model):
-#     rating_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-#     student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name='skill_ratings')
-#     term = models.ForeignKey('Term', on_delete=models.CASCADE)
-#     year = models.ForeignKey('Year', on_delete=models.CASCADE)
-#     class_year = models.ForeignKey('ClassYear', on_delete=models.CASCADE)
-#     class_arm = models.ForeignKey('ClassDepartment', on_delete=models.CASCADE)
-#     skill = models.ForeignKey('SkillCategory', on_delete=models.CASCADE)
-#     rating = models.ForeignKey('SkillRatingScale', on_delete=models.SET_NULL, null=True, blank=True)
-#     remarks = models.CharField(max_length=255, null=True, blank=True)
-
-#     class Meta:
-#         unique_together = ('student', 'term', 'skill')
-
-#     def __str__(self):
-#         return f"{self.student.first_name} - {self.skill.name}: {self.rating.name if self.rating else 'Not Rated'}"
-
-
-# class StudentComment(models.Model):
-#     student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name='comments')
-#     term = models.ForeignKey('Term', on_delete=models.CASCADE)
-#     year = models.ForeignKey('Year', on_delete=models.CASCADE)
-#     class_year = models.ForeignKey('ClassYear', on_delete=models.CASCADE)
-#     class_arm = models.ForeignKey('ClassDepartment', on_delete=models.CASCADE)
-#     class_teacher_name = models.CharField(max_length=150)
-#     class_teacher_comment = models.TextField(blank=True, null=True)
-#     head_teacher_comment = models.TextField(blank=True, null=True)
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
-
-#     class Meta:
-#         unique_together = ('student', 'term', 'year')
-
-#     def __str__(self):
-#         return f"Comments - {self.student.first_name} {self.student.last_name} ({self.year.name}, {self.term.name})"
 
 ############# END OF COMMENT MODULE #################
-
-class Day(models.Model):
-    """
-    Represents days of the week or academic schedule.
-    """
-    day_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=100)
-    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="days")
-
-    def __str__(self):
-        return self.name
-
-
-class Period(models.Model):
-    """
-    Represents time periods in a school's timetable.
-    """
-    period_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="periods")
-    start_time = models.TimeField()
-    end_time = models.TimeField()
-
-    def __str__(self):
-        return f"{self.start_time} - {self.end_time}"
-
-
-class SubjectPeriodLimit(models.Model):
-    """
-    Represents subject-specific period constraints.
-    """
-    subjectperiodlimit_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="subject_period_limits")
-    subject = models.ForeignKey('Subject', on_delete=models.CASCADE, related_name="period_limits")
-    periods_per_week = models.IntegerField()
-    double_periods = models.IntegerField()
-
-    def __str__(self):
-        return f"{self.subject.name} ({self.periods_per_week} periods/week)"
-
-
-class Constraint(models.Model):
-    """
-    Represents time constraints for a school (e.g., breaks, fellowship).
-    """
-    school = models.OneToOneField('School', on_delete=models.CASCADE, related_name="constraints")
-    fellowship_time = models.JSONField()
-    break_times = models.JSONField()
-
-    def __str__(self):
-        return f"Constraints for {self.school.school_name}"
 
 class AttendancePolicy(models.Model):
     """
@@ -811,6 +726,7 @@ class AttendancePolicy(models.Model):
 
     def __str__(self):
         return f"Attendance Policy ({self.minimum_attendance_percentage}%)"
+
 
 class FeeCategory(models.Model):
     """
@@ -841,9 +757,6 @@ class Fee(models.Model):
         return f"Fee for {self.student.first_name} {self.student.last_name}"
 
 
-
-
-
 class Notification(models.Model):
     """
     Represents notifications sent to users or groups in a school.
@@ -864,9 +777,6 @@ class Notification(models.Model):
 
     def __str__(self):
         return self.title
-
-
-
 
 class Attendance(models.Model):
     """
@@ -905,30 +815,59 @@ class AttendanceFlag(models.Model):
         return f"Flag for {self.student.first_name} ({self.attendance_percentage}%)"
 
 
-class StudentSubjectAssignment(models.Model):
+############TIME TABLE #################
+class Day(models.Model):
     """
-    Tracks subject assignments for students.
+    Represents days of the week or academic schedule.
     """
-    assignment_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name="subject_assignments")
-    subject = models.ForeignKey('Subject', on_delete=models.CASCADE, related_name="student_assignments")
-    class_assigned = models.ForeignKey('Class', on_delete=models.CASCADE, related_name="student_subject_assignments")
-    term = models.ForeignKey('Term', on_delete=models.CASCADE, related_name="student_subject_assignments")
-    year = models.ForeignKey('Year', on_delete=models.CASCADE, related_name="student_subject_assignments")
-    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="student_subject_assignments")
-    assigned_by = models.ForeignKey('ClassTeacher', on_delete=models.SET_NULL, null=True, related_name="assigned_students")
-    assignment_date = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=20, choices=[
-        ('Pending', 'Pending'),
-        ('Approved', 'Approved'),
-        ('Rejected', 'Rejected')
-    ], default='Pending')
-    status_updated_at = models.DateTimeField(null=True, blank=True)
-    rejection_reason = models.TextField(null=True, blank=True)
+    day_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100)
+    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="days")
 
     def __str__(self):
-        return f"{self.student.first_name} - {self.subject.name} ({self.status})"
+        return self.name
+    pass
 
+
+class Period(models.Model):
+    """
+    Represents time periods in a school's timetable.
+    """
+    period_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="periods")
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+
+    def __str__(self):
+        return f"{self.start_time} - {self.end_time}"
+    pass
+
+
+class SubjectPeriodLimit(models.Model):
+    """
+    Represents subject-specific period constraints.
+    """
+    subjectperiodlimit_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="subject_period_limits")
+    subject = models.ForeignKey('Subject', on_delete=models.CASCADE, related_name="period_limits")
+    periods_per_week = models.IntegerField()
+    double_periods = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.subject.name} ({self.periods_per_week} periods/week)"
+    pass
+
+class Constraint(models.Model):
+    """
+    Represents time constraints for a school (e.g., breaks, fellowship).
+    """
+    school = models.OneToOneField('School', on_delete=models.CASCADE, related_name="constraints")
+    fellowship_time = models.JSONField()
+    break_times = models.JSONField()
+
+    def __str__(self):
+        return f"Constraints for {self.school.school_name}"
+    pass
 
 class Timetable(models.Model):
     """

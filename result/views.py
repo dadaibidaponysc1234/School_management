@@ -717,7 +717,8 @@ class ClassTeacherCommentListCreateView(generics.ListCreateAPIView):
         if student.studentclass.class_year != assigned_class:
             raise serializers.ValidationError("This student is not in your assigned class.")
 
-        generated_comment = generate_teacher_comment(skills, gender=student.gender)
+        generated_comment = "generate_teacher_comment(skills, gender=student.gender)"
+        # generated_comment = generate_teacher_comment(skills, gender=student.gender)
 
         serializer.save(
             classteacher=user.classteacher,

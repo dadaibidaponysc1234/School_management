@@ -3,21 +3,25 @@ from .models import (Role, UserRole, SuperAdmin, School,Subscription,
                      ComplianceVerification,Message,SchoolAdmin,
                      Year,Term,ClassYear,Class,Classroom,
                      Student,Teacher,Department,Subject,ClassTeacher,
-                     SubjectRegistrationControl,TeacherAssignment,Day,Period,
-                     SubjectPeriodLimit,Constraint,AttendancePolicy,FeeCategory,
+                     SubjectRegistrationControl,TeacherAssignment,AttendancePolicy,FeeCategory,
                      Fee,AssessmentCategory,ScorePerAssessmentInstance,ExamScore, 
                      ScoreObtainedPerAssessment, ContinuousAssessment,Result,AnnualResult,Notification, 
-                     ClassTeacherComment, Attendance, AttendanceFlag, StudentSubjectAssignment,
+                     ClassTeacherComment, Attendance, AttendanceFlag,
                      StudentRegistrationPin,Timetable,ClassTimetable,
                      TeacherTimetable,SubjectClass,ClassDepartment,StudentClass,
                     StudentSubjectRegistration,ResultConfiguration, AnnualResultWeightConfig,
-                    GradingSystem,
+                    GradingSystem,Day,Period,SubjectPeriodLimit,Constraint
                      )
 # (AssessmentCategory,ResultConfiguration, AnnualResultWeightConfig,
 # GradingSystem,ScorePerAssessmentInstance,ScoreObtainedPerAssessment,
 # ExamScore, ContinuousAssessment,Result, AnnualResult
 # )
 # admin.site.register(CustomUser)
+admin.site.register(Day)
+admin.site.register(Period)
+admin.site.register(SubjectPeriodLimit)
+admin.site.register(Constraint)
+
 admin.site.register(Role)
 admin.site.register(UserRole)
 admin.site.register(SuperAdmin)
@@ -39,10 +43,6 @@ admin.site.register(Subject)
 admin.site.register(ClassTeacher)
 admin.site.register(SubjectRegistrationControl)
 admin.site.register(TeacherAssignment)
-admin.site.register(Day)
-admin.site.register(Period)
-admin.site.register(SubjectPeriodLimit)
-admin.site.register(Constraint)
 admin.site.register(AttendancePolicy)
 admin.site.register(FeeCategory)
 admin.site.register(Fee)
@@ -58,7 +58,7 @@ admin.site.register(Notification)
 admin.site.register(ClassTeacherComment)
 admin.site.register(Attendance)
 admin.site.register(AttendanceFlag)
-admin.site.register(StudentSubjectAssignment)
+# admin.site.register(StudentSubjectAssignment)
 admin.site.register(StudentRegistrationPin)
 admin.site.register(StudentSubjectRegistration)
 admin.site.register(Timetable)

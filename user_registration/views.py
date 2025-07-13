@@ -691,8 +691,12 @@ class StudentSelfRegistrationView(generics.CreateAPIView):
         if not class_year_name or not class_arm_name:
             return Response({'error': 'class_year_name and class_arm_name are required.'}, status=400)
 
-        class_year = ClassYear.objects.filter(year_name__iexact=class_year_name, school=pin.school).first()
-        class_arm = ClassDepartment.objects.filter(classes__arm_name__iexact=class_arm_name, school=pin.school).first()
+        # class_year = ClassYear.objects.filter(year_name__iexact=class_year_name, school=pin.school).first()
+        # class_arm = Class.objects.filter(classes__arm_name__iexact=class_arm_name, school=pin.school).first()
+
+        class_year = ClassYear.objects.filter(class_name__iexact=class_year_name, school=pin.school).first()
+        class_arm = Class.objects.filter(arm_name__iexact=class_arm_name, school=pin.school, class_year=class_year).first()
+
 
         if not class_year or not class_arm:
             return Response({'error': 'Invalid class_year_name or class_arm_name.'}, status=400)

@@ -8,6 +8,7 @@ from .views import (YearListCreateView, YearDetailView, TermListCreateView,
                     SubjectClassListCreateView, SubjectClassDetailView, ClassDepartmentListCreateView,
                     ClassDepartmentDetailView, StudentClassListView, StudentClassUpdateView,StudentSubjectRegistrationListCreateView,
                     StudentSubjectRegistrationDetailView, SubjectRegistrationControlView,UpdateSubjectRegistrationStatusView,
+                    BulkSubjectClassAssignmentView,
 
                     )
 #BulkTeacherAssignmentCreateView,
@@ -52,6 +53,7 @@ urlpatterns = [
     path('assignments/class_departments/<uuid:subject_class_id>/', ClassDepartmentDetailView.as_view(), name='class_department_detail'),
     
     path('assignments/subject_department/', SubjectClassListCreateView.as_view(), name='subject-class-list-create'),
+    path('assignments/subject_department_bulk/', BulkSubjectClassAssignmentView.as_view(), name='subject-class-bulk-assign'),
     path('assignments/subject_department/<uuid:subject_class_id>/', SubjectClassDetailView.as_view(), name='subject-class-detail'),
     
     path('assignments/teacher_assignments/', TeacherAssignmentListCreateView.as_view(), name='teacher-assignment-list-create'),

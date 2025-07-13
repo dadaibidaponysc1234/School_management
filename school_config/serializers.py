@@ -128,6 +128,33 @@ class SubjectClassSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['school']
 
+
+class BulkSubjectClassAssignmentSerializer(serializers.Serializer):
+    """
+    Accepts a list of subject IDs and one department ID for bulk assignment.
+    """
+    subject_ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        write_only=True
+    )
+    department_id = serializers.UUIDField()
+
+    def validate(self, data):
+        request = self.context['request']
+        school = request.user.school_admin.school
+        subjects = Subject.objects.filter(subject_id__in=data['subject_ids'], school=school)
+        department = Department.objects.filter(department_id=data['department_id'], school=school).first()
+
+        if len(subjects) != len(data['subject_ids']):
+            raise serializers.ValidationError("Some subjects are invalid or do not belong to your school.")
+        if not department:
+            raise serializers.ValidationError("Department not found or does not belong to your school.")
+
+        data['subjects'] = subjects
+        data['department'] = department
+        return data
+
+
 #############################################################################################################
 class ClassDepartmentSerializer(serializers.ModelSerializer):
     class_name = serializers.CharField(source='classes.arm_name', read_only=True)

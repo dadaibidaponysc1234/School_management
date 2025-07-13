@@ -11,7 +11,8 @@ from .serializers import (YearSerializer,TermSerializer,ClassYearSerializer,
                            StudentSubjectRegistrationSerializer, StudentClassSerializer,
                           SubjectClassSerializer,ClassDepartmentSerializer,
                           SubjectRegistrationControlUpdateSerializer,SubjectRegistrationControlSerializer,
-                          StudentSubjectStatusUpdateSerializer,DaySerializer,PeriodSerializer,SubjectPeriodLimitSerializer,ConstraintSerializer
+                          StudentSubjectStatusUpdateSerializer,DaySerializer,PeriodSerializer,
+                          SubjectPeriodLimitSerializer,ConstraintSerializer,BulkSubjectClassAssignmentSerializer,
                           )
 
 from rest_framework.views import APIView
@@ -497,6 +498,37 @@ class SubjectClassListCreateView(generics.ListCreateAPIView):
             raise ValidationError("Subject and department must belong to the same school.")
 
         serializer.save(school=school)
+
+
+class BulkSubjectClassAssignmentView(APIView):
+    """
+    Assign multiple subjects to a department (bulk create).
+    Accessible only by School Admins.
+    """
+    permission_classes = [IsschoolAdmin]
+
+    def post(self, request):
+        serializer = BulkSubjectClassAssignmentSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+
+        school = request.user.school_admin.school
+        department = serializer.validated_data['department']
+        subjects = serializer.validated_data['subjects']
+
+        created = []
+        for subject in subjects:
+            obj, created_flag = SubjectClass.objects.get_or_create(
+                subject=subject,
+                department=department,
+                school=school
+            )
+            if created_flag:
+                created.append(obj)
+
+        return Response(
+            {"message": f"{len(created)} subject(s) successfully assigned to {department.name}."},
+            status=status.HTTP_201_CREATED
+        )
 
 
 class SubjectClassDetailView(generics.RetrieveUpdateDestroyAPIView):

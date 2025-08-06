@@ -64,7 +64,7 @@ class School(models.Model):
     state = models.CharField(max_length=255)
     region = models.CharField(max_length=255)
     country = models.CharField(max_length=255)
-    email = models.EmailField()
+    email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=15)
     short_name = models.CharField(max_length=15)
     logo = models.ImageField(upload_to="school_logos/", null=True, blank=True)  # Optional field for school logo
@@ -73,6 +73,15 @@ class School(models.Model):
     registered_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="registered_schools")  # Track user who registered the school
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['school_name', 'school_address'],
+                name='unique_school_name_address',
+                violation_error_message="A school with this name and address already exists."
+            )
+        ]
+        
     def __str__(self):
         return self.school_name
 

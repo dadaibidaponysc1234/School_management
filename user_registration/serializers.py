@@ -230,25 +230,6 @@ class SchoolCreateSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id']
 
-    def validate(self, data):
-        # Validate uniqueness of school_name and school_address combination
-        if School.objects.filter(
-            school_name=data.get('school_name'), 
-            school_address=data.get('school_address')
-        ).exists():
-            raise serializers.ValidationError(
-                {"detail": "A school with this name and address already exists."}
-            )
-
-        # Validate email uniqueness if provided
-        email = data.get('email')
-        if email and School.objects.filter(email=email).exists():
-            raise serializers.ValidationError(
-                {"email": "A school with this email already exists."}
-            )
-
-        return data
-
     def create(self, validated_data):
         # Add the `registered_by` user dynamically in the view
         user = self.context['request'].user

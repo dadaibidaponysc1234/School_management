@@ -20,7 +20,7 @@ class NotificationListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         # Only show notifications for the authenticated user's school
-        return Notification.objects.filter(school=self.request.user.schooladmin.school).order_by('-created_at')
+        return Notification.objects.filter(school=self.request.user.school_admin.school).order_by('-created_at')
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -29,7 +29,7 @@ class NotificationListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         # Automatically associate the notification with the authenticated user's school
-        serializer.save(school=self.request.user.schooladmin.school)
+        serializer.save(school=self.request.user.school_admin.school)
 
 class NotificationDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
@@ -40,7 +40,7 @@ class NotificationDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         # Only allow access to notifications in the authenticated user's school
-        return Notification.objects.filter(school=self.request.user.schooladmin.school)
+        return Notification.objects.filter(school=self.request.user.school_admin.school)
 
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:
@@ -56,7 +56,7 @@ class RecentNotificationsView(generics.ListAPIView):
 
     def get_queryset(self):
         # Fetch the last 5 notifications for the authenticated user's school
-        return Notification.objects.filter(school=self.request.user.schooladmin.school).order_by('-created_at')[:5]
+        return Notification.objects.filter(school=self.request.user.school_admin.school).order_by('-created_at')[:5]
 
 
 
@@ -70,7 +70,7 @@ class TeacherAndEveryoneNotificationView(generics.ListAPIView):
 
     def get_queryset(self):
         return Notification.objects.filter(
-            school=self.request.user.schooladmin.school,
+            school=self.request.user.school_admin.school,
             recipient_group__in=['Teacher', 'Everyone']
         ).order_by('-created_at')
 
@@ -84,6 +84,6 @@ class StudentAndEveryoneNotificationView(generics.ListAPIView):
 
     def get_queryset(self):
         return Notification.objects.filter(
-            school=self.request.user.schooladmin.school,
+            school=self.request.user.school_admin.school,
             recipient_group__in=['Student', 'Everyone']
         ).order_by('-created_at')

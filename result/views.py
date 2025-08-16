@@ -33,7 +33,9 @@ class ResultVisibilityControlListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsschoolAdmin]
 
     def get_queryset(self):
-        user = self.request.user
+        user = getattr(self, 'request', None) and getattr(self.request, 'user', None)
+        if getattr(self, 'swagger_fake_view', False) or not user or not getattr(user, 'is_authenticated', False):
+            return ResultVisibilityControl.objects.none()
         if hasattr(user, 'school_admin'):
             return ResultVisibilityControl.objects.filter(school=user.school_admin.school)
         return ResultVisibilityControl.objects.none()
@@ -66,6 +68,8 @@ class AssessmentCategoryListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated, IsschoolAdmin]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self, 'request', None) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return AssessmentCategory.objects.none()
         return AssessmentCategory.objects.filter(school=self.request.user.school_admin.school)
 
     def perform_create(self, serializer):
@@ -78,6 +82,8 @@ class AssessmentCategoryDetailView(generics.RetrieveDestroyAPIView):
     lookup_field = 'assessment_category_id'
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self, 'request', None) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return AssessmentCategory.objects.none()
         return AssessmentCategory.objects.filter(school=self.request.user.school_admin.school)
 
 #=========================================================================================
@@ -86,6 +92,8 @@ class ResultConfigurationListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsschoolAdmin]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self, 'request', None) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return ResultConfiguration.objects.none()
         return ResultConfiguration.objects.filter(school=self.request.user.school_admin.school)
 
     def post(self, request, *args, **kwargs):
@@ -107,6 +115,8 @@ class ResultConfigurationDetailView(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'id'
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self, 'request', None) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return ResultConfiguration.objects.none()
         return ResultConfiguration.objects.filter(school=self.request.user.school_admin.school)
 
     def perform_update(self, serializer):
@@ -118,6 +128,8 @@ class AnnualWeightConfigListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsschoolAdmin]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self, 'request', None) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return AnnualResultWeightConfig.objects.none()
         return AnnualResultWeightConfig.objects.filter(school=self.request.user.school_admin.school)
 
     def post(self, request, *args, **kwargs):
@@ -143,6 +155,8 @@ class AnnualWeightConfigDetailView(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'id'
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self, 'request', None) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return AnnualResultWeightConfig.objects.none()
         return AnnualResultWeightConfig.objects.filter(school=self.request.user.school_admin.school)
 
     def perform_update(self, serializer):
@@ -155,6 +169,8 @@ class GradingSystemListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsschoolAdmin]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self, 'request', None) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return GradingSystem.objects.none()
         return GradingSystem.objects.filter(school=self.request.user.school_admin.school)
 
     def perform_create(self, serializer):
@@ -167,6 +183,8 @@ class GradingSystemDetailView(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'id'
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self, 'request', None) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return GradingSystem.objects.none()
         return GradingSystem.objects.filter(school=self.request.user.school_admin.school)
 
     def perform_update(self, serializer):

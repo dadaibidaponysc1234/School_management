@@ -737,6 +737,8 @@ class StudentListView(generics.ListAPIView):
 
     def get_queryset(self):
         # Return only students in the School Admin's school
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self, 'request', None) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return self.queryset.none()
         return self.queryset.filter(school=self.request.user.school_admin.school)
 
 
@@ -781,17 +783,15 @@ class TeacherCreateView(generics.CreateAPIView):
         serializer.save(school=school)
 
 
-class TeacherBulkCreateView(generics.CreateAPIView):
+class TeacherBulkCreateView(APIView):
     """
     Bulk register teachers from a CSV file (accessible by School Admin).
     - Optimized for speed using bulk inserts.
     - Ensures data validation before inserting any records.
     - Prevents user creation if teacher data has errors.
     """
-    queryset = Teacher.objects.all()
     permission_classes = [IsschoolAdmin]
     parser_classes = [parsers.MultiPartParser]
-    # serializer_class = TeacherCreateSerializer
 
     @swagger_auto_schema(
         manual_parameters=[

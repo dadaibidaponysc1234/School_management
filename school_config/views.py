@@ -63,6 +63,8 @@ class YearListCreateView(generics.ListCreateAPIView):
     filterset_fields = ['status']
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return Year.objects.none()
         return Year.objects.filter(school=self.request.user.school_admin.school)
 
     def perform_create(self, serializer):
@@ -76,6 +78,8 @@ class YearDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsschoolAdmin]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return Year.objects.none()
         return Year.objects.filter(school=self.request.user.school_admin.school)
 
     def update(self, request, *args, **kwargs):
@@ -120,6 +124,8 @@ class TermListCreateView(generics.ListCreateAPIView):
     filterset_fields = ['status', 'year']
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return Term.objects.none()
         return Term.objects.filter(school=self.request.user.school_admin.school)
 
     def perform_create(self, serializer):
@@ -133,6 +139,8 @@ class TermDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsschoolAdmin]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return Term.objects.none()
         return Term.objects.filter(school=self.request.user.school_admin.school)
 
     def perform_update(self, serializer):
@@ -149,6 +157,8 @@ class ClassYearListCreateView(generics.ListCreateAPIView):
     filter_backends = [DjangoFilterBackend]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return ClassYear.objects.none()
         return ClassYear.objects.filter(school=self.request.user.school_admin.school)
 
     def perform_create(self, serializer):
@@ -159,6 +169,8 @@ class ClassYearDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsschoolAdmin]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return ClassYear.objects.none()
         return ClassYear.objects.filter(school=self.request.user.school_admin.school)
     
 
@@ -169,6 +181,8 @@ class ClassListCreateView(generics.ListCreateAPIView):
     # pagination_class = PageNumberPagination
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return Class.objects.none()
         return Class.objects.filter(school=self.request.user.school_admin.school)
 
     def perform_create(self, serializer):
@@ -179,6 +193,8 @@ class ClassDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsschoolAdmin]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return Class.objects.none()
         return Class.objects.filter(school=self.request.user.school_admin.school)
     
     
@@ -190,6 +206,8 @@ class ClassroomListCreateView(generics.ListCreateAPIView):
     # pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return Classroom.objects.none()
         return Classroom.objects.filter(school=self.request.user.school_admin.school)
 
     def perform_create(self, serializer):
@@ -200,6 +218,8 @@ class ClassroomDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsschoolAdmin]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return Classroom.objects.none()
         return Classroom.objects.filter(school=self.request.user.school_admin.school)
 
 
@@ -213,6 +233,9 @@ class DepartmentListCreateView(generics.ListCreateAPIView):
     # pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
+        # Short-circuit during schema generation or when unauthenticated
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return Department.objects.none()
         return Department.objects.filter(school=self.request.user.school_admin.school)
 
     def perform_create(self, serializer):
@@ -226,6 +249,9 @@ class DepartmentDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsschoolAdmin]
 
     def get_queryset(self):
+        # Short-circuit during schema generation or when unauthenticated
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return Department.objects.none()
         return Department.objects.filter(school=self.request.user.school_admin.school)
 
 
@@ -244,6 +270,10 @@ class SubjectListCreateView(generics.ListCreateAPIView):
         Retrieves subjects based on the authenticated school admin's school.
         Supports filtering by department ID.
         """
+        # Short-circuit during schema generation or when unauthenticated
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return Subject.objects.none()
+
         school = self.request.user.school_admin.school
         queryset = Subject.objects.filter(school=school)
 
@@ -269,6 +299,9 @@ class SubjectDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsschoolAdmin]
 
     def get_queryset(self):
+        # Short-circuit during schema generation or when unauthenticated
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return Subject.objects.none()
         return Subject.objects.filter(school=self.request.user.school_admin.school)
 
 
@@ -287,6 +320,8 @@ class ClassTeacherListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         # Filter by the authenticated school admin's school
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return ClassTeacher.objects.none()
         return ClassTeacher.objects.filter(school=self.request.user.school_admin.school)
 
     def perform_create(self, serializer):
@@ -311,6 +346,8 @@ class ClassTeacherDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         # Filter by the authenticated school admin's school
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return ClassTeacher.objects.none()
         return ClassTeacher.objects.filter(school=self.request.user.school_admin.school)
 
     def perform_update(self, serializer):
@@ -435,6 +472,8 @@ class ClassTeacherListView(generics.ListAPIView):
     pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return ClassTeacher.objects.none()
         school = self.request.user.school_admin.school
         return ClassTeacher.objects.filter(school=school)
 
@@ -448,6 +487,8 @@ class ClassTeacherUpdateView(generics.RetrieveUpdateAPIView):
     lookup_field = 'pk'
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return ClassTeacher.objects.none()
         return ClassTeacher.objects.filter(school=self.request.user.school_admin.school)
 
 
@@ -483,6 +524,8 @@ class SubjectClassListCreateView(generics.ListCreateAPIView):
         """
         Returns SubjectClasses only for the authenticated School Admin's school.
         """
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return SubjectClass.objects.none()
         return SubjectClass.objects.filter(school=self.request.user.school_admin.school)
 
     def perform_create(self, serializer):
@@ -544,6 +587,8 @@ class SubjectClassDetailView(generics.RetrieveUpdateDestroyAPIView):
         """
         Returns only SubjectClass mappings for the authenticated School Admin's school.
         """
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return SubjectClass.objects.none()
         return SubjectClass.objects.filter(school=self.request.user.school_admin.school)
 
     def perform_update(self, serializer):
@@ -568,6 +613,8 @@ class ClassDepartmentListCreateView(generics.ListCreateAPIView):
     search_fields = ['classes__arm_name', 'department__name']
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return ClassDepartment.objects.none()
         return ClassDepartment.objects.filter(school=self.request.user.school_admin.school)
     
     def perform_create(self, serializer):
@@ -586,6 +633,8 @@ class ClassDepartmentDetailView(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'subject_class_id'
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return ClassDepartment.objects.none()
         return ClassDepartment.objects.filter(school=self.request.user.school_admin.school)
     
     def perform_update(self, serializer):
@@ -615,6 +664,9 @@ class TeacherAssignmentListCreateView(generics.ListCreateAPIView):
         """
         Returns assignments only for the authenticated School Admin's school.
         """
+        # Short-circuit during schema generation or when unauthenticated
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return TeacherAssignment.objects.none()
         return TeacherAssignment.objects.filter(school=self.request.user.school_admin.school)
 
     def perform_create(self, serializer):
@@ -644,6 +696,9 @@ class TeacherAssignmentDetailView(generics.RetrieveUpdateDestroyAPIView):
         """
         Returns assignments only for the authenticated School Admin's school.
         """
+        # Short-circuit during schema generation or when unauthenticated
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self, 'request', None) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return TeacherAssignment.objects.none()
         return TeacherAssignment.objects.filter(school=self.request.user.school_admin.school)
 
     def perform_update(self, serializer):
@@ -675,6 +730,10 @@ class StudentClassListView(generics.ListAPIView):
     permission_classes = [SchoolAdminOrIsClassTeacherOrISstudent]
 
     def get_queryset(self):
+        # Short-circuit during schema generation or when unauthenticated
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self, 'request', None) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False):
+            return StudentClass.objects.none()
+
         user = self.request.user
 
         if hasattr(user, 'school_admin'):
@@ -689,7 +748,8 @@ class StudentClassListView(generics.ListAPIView):
         elif hasattr(user, 'student'):
             return StudentClass.objects.filter(student=user.student)
 
-        raise ValidationError("Unauthorized access or user role not recognized.")
+        # If user does not match any known role, return an empty queryset
+        return StudentClass.objects.none()
 
 
 class StudentClassUpdateView(generics.UpdateAPIView):
@@ -703,6 +763,8 @@ class StudentClassUpdateView(generics.UpdateAPIView):
     lookup_field = 'student_class_id'
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return StudentClass.objects.none()
         return StudentClass.objects.filter(student__school=self.request.user.school_admin.school)
 
 
@@ -847,6 +909,8 @@ class DayListCreateView(generics.ListCreateAPIView):
     pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return Day.objects.none()
         return Day.objects.filter(school=self.request.user.school_admin.school)
 
     def perform_create(self, serializer):
@@ -861,6 +925,8 @@ class DayDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsschoolAdmin]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return Day.objects.none()
         return Day.objects.filter(school=self.request.user.school_admin.school)
 
 
@@ -874,6 +940,8 @@ class PeriodListCreateView(generics.ListCreateAPIView):
     pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return Period.objects.none()
         return Period.objects.filter(school=self.request.user.school_admin.school)
 
     def perform_create(self, serializer):
@@ -888,6 +956,8 @@ class PeriodDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsschoolAdmin]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return Period.objects.none()
         return Period.objects.filter(school=self.request.user.school_admin.school)
 
 
@@ -901,6 +971,8 @@ class SubjectPeriodLimitListCreateView(generics.ListCreateAPIView):
     pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return SubjectPeriodLimit.objects.none()
         return SubjectPeriodLimit.objects.filter(school=self.request.user.school_admin.school)
 
     def perform_create(self, serializer):
@@ -915,6 +987,8 @@ class SubjectPeriodLimitDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsschoolAdmin]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+            return SubjectPeriodLimit.objects.none()
         return SubjectPeriodLimit.objects.filter(school=self.request.user.school_admin.school)
 
 

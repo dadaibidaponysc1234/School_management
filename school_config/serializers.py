@@ -93,19 +93,20 @@ class ClassTeacherSerializer(serializers.ModelSerializer):
     Serializer for ClassTeacher model.
     Returns teacher name, class name, and school name.
     """
-    class_assigned_name = serializers.CharField(source='class_assigned.arm_name', read_only=True)
+    class_assigned_arm = serializers.CharField(source='class_assigned.arm_name', read_only=True)
     teacher_name = serializers.CharField(source='teacher.first_name', read_only=True)
     teacher_lastname = serializers.CharField(source='teacher.last_name', read_only=True)
     school_name = serializers.CharField(source='school.school_name', read_only=True)
+    class_assigned_name = serializers.CharField(source='class_assigned.class_year.class_name', read_only=True)
 
     class Meta:
         model = ClassTeacher
         fields = [
             'class_teacher_id', 'class_assigned', 'teacher', 'school',
-            'class_assigned_name', 'teacher_name', 'teacher_lastname', 'school_name'
+            'class_assigned_name', 'class_assigned_arm', 'teacher_name', 'teacher_lastname', 'school_name'
         ]
         extra_kwargs = {
-            'class_assigned': {'write_only': True},
+            # 'class_assigned': {'write_only': True},
             'teacher': {'write_only': True},
         }
         read_only_fields = ['school']

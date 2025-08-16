@@ -197,6 +197,6 @@ local_settings.py
 
 # Work files
 sen/
-user/
-nice code
-improvements to make.md
+testdb.sqlite3
+before-push
+seed.py

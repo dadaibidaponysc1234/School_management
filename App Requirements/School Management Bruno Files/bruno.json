@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "School Management Bruno Files",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

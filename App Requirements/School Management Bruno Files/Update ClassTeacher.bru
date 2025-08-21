@@ -1,0 +1,26 @@
+meta {
+  name: Update ClassTeacher
+  type: http
+  seq: 2
+}
+
+patch {
+  url: http://127.0.0.1:8000/api/assignments/class_teachers/03c208e1-e823-4d8a-b130-7bb0879a626d/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU1Mzk0MTQ0LCJpYXQiOjE3NTUzMDc3NDQsImp0aSI6IjM1ZDA4ZWJmMmI2MTRhYTJhMTA4ZTM0MTJjMjNjNTQ3IiwidXNlcl9pZCI6MzE2fQ.cT9RgMPgh7ufOdTZEjKmGEBVGSI1at1d2UychqAYg9k
+}
+
+body:json {
+  {
+        "class_teacher_id": "03c208e1-e823-4d8a-b130-7bb0879a626d",
+        "class_assigned": "e13c87ce-c5f6-4540-a0de-58977652a9af"
+      }
+}
+
+settings {
+  encodeUrl: true
+}

@@ -461,7 +461,6 @@ class SubjectRegistrationControl(models.Model):
 # models.py (snippet for StudentSubjectRegistration)
 class StudentSubjectRegistration(models.Model):
     registration_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
     student_class = models.ForeignKey('StudentClass', on_delete=models.CASCADE, related_name="subject_registrations")
     subject_class = models.ForeignKey('SubjectClass', on_delete=models.CASCADE, related_name="subject_registrations")
     term = models.ForeignKey('Term', on_delete=models.CASCADE, related_name="subject_registrations")
@@ -787,42 +786,6 @@ class Notification(models.Model):
     def __str__(self):
         return self.title
 
-class Attendance(models.Model):
-    """
-    Represents attendance records for students.
-    """
-    attendance_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="attendance_records")
-    date = models.DateField()
-    class_assigned = models.ForeignKey('Class', on_delete=models.CASCADE, related_name="attendance_records")
-    student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name="attendance_records")
-    term = models.ForeignKey('Term', on_delete=models.CASCADE, related_name="attendance_records")
-    year = models.ForeignKey('Year', on_delete=models.CASCADE, related_name="attendance_records")
-    is_present = models.BooleanField(default=False)
-    designation = models.ForeignKey('ClassTeacher', on_delete=models.CASCADE, related_name="attendance_records")
-
-    def __str__(self):
-        return f"Attendance for {self.student.first_name} on {self.date}"
-
-
-class AttendanceFlag(models.Model):
-    """
-    Represents flagged attendance records for students.
-    """
-    flag_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name="attendance_flags")
-    class_assigned = models.ForeignKey('Class', on_delete=models.CASCADE, related_name="attendance_flags")
-    term = models.ForeignKey('Term', on_delete=models.CASCADE, related_name="attendance_flags")
-    year = models.ForeignKey('Year', on_delete=models.CASCADE, related_name="attendance_flags")
-    number_of_times_attended = models.FloatField()
-    number_of_times_open = models.FloatField()
-    attendance_percentage = models.FloatField()
-    flag_reason = models.CharField(max_length=255, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Flag for {self.student.first_name} ({self.attendance_percentage}%)"
-
 
 ############TIME TABLE #################
 class Day(models.Model):
@@ -904,4 +867,50 @@ class TeacherTimetable(models.Model):
     timetable = models.ForeignKey(Timetable, on_delete=models.CASCADE, related_name="teacher_timetables")
     teacher = models.ForeignKey('user_registration.Teacher', on_delete=models.CASCADE, related_name="timetables")
     schedule = models.JSONField()  # Store the timetable as JSON
+
+
+"""
+Attendance models live in this app to centralize core domain models used by other apps.
+"""
+
+class AttendanceSession(models.Model):
+    ROLE_CHOICES = [
+        ("school_admin", "School Admin"),
+        ("teacher", "Teacher"),
+    ]
+    class_obj = models.ForeignKey('Class', on_delete=models.CASCADE, related_name="attendance_sessions")
+    date = models.DateField()
+    taken_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="attendance_sessions")
+    taken_by_role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["class_obj", "date"], name="uniq_attendance_session_class_date")
+        ]
+        ordering = ["-date", "class_obj__arm_name"]
+
+    def __str__(self):
+        return f"{self.class_obj} - {self.date}"
+
+
+class AttendanceRecord(models.Model):
+    STATUS_CHOICES = [
+        ("present", "Present"),
+        ("absent", "Absent"),
+    ]
+    session = models.ForeignKey(AttendanceSession, on_delete=models.CASCADE, related_name="records")
+    student = models.ForeignKey('Student', on_delete=models.SET_NULL, null=True, blank=True, related_name="attendance_records")
+    student_name = models.CharField(max_length=255)
+    admission_number = models.CharField(max_length=50)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="present")
+    marked_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["session", "student"], name="uniq_attendance_session_student")
+        ]
+        ordering = ["student_name"]
+
+    def __str__(self):
+        return f"{self.student_name} ({self.admission_number}) - {self.status}"
 

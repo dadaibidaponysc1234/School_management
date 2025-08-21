@@ -6,7 +6,7 @@ from .models import (Role, UserRole, SuperAdmin, School,Subscription,
                      SubjectRegistrationControl,TeacherAssignment,AttendancePolicy,FeeCategory,
                      Fee,AssessmentCategory,ScorePerAssessmentInstance,ExamScore, 
                      ScoreObtainedPerAssessment, ContinuousAssessment,Result,AnnualResult,Notification, 
-                     ClassTeacherComment, Attendance, AttendanceFlag,
+                     ClassTeacherComment,
                      StudentRegistrationPin,Timetable,ClassTimetable,
                      TeacherTimetable,SubjectClass,ClassDepartment,StudentClass,
                     StudentSubjectRegistration,ResultConfiguration, AnnualResultWeightConfig,
@@ -56,8 +56,6 @@ admin.site.register(Result)
 admin.site.register(AnnualResult)
 admin.site.register(Notification)
 admin.site.register(ClassTeacherComment)
-admin.site.register(Attendance)
-admin.site.register(AttendanceFlag)
 # admin.site.register(StudentSubjectAssignment)
 admin.site.register(StudentRegistrationPin)
 admin.site.register(StudentSubjectRegistration)

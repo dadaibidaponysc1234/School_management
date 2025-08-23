@@ -105,10 +105,6 @@ class ClassTeacherSerializer(serializers.ModelSerializer):
             'class_teacher_id', 'class_assigned', 'teacher', 'school',
             'class_assigned_name', 'class_assigned_arm', 'teacher_name', 'teacher_lastname', 'school_name'
         ]
-        extra_kwargs = {
-            # 'class_assigned': {'write_only': True},
-            'teacher': {'write_only': True},
-        }
         read_only_fields = ['school']
 
 #############################################################################################################

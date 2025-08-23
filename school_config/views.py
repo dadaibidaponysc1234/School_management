@@ -675,11 +675,12 @@ class TeacherAssignmentListCreateView(generics.ListCreateAPIView):
         """
         school = self.request.user.school_admin.school
         teacher = serializer.validated_data['teacher']
-        subject = serializer.validated_data['subject']
-        class_assigned = serializer.validated_data['class_assigned']
+        subject_class = serializer.validated_data['subject_class']
+        class_department_assigned = serializer.validated_data['class_department_assigned']
 
-        if any(obj.school != school for obj in [teacher, subject, class_assigned]):
-            raise ValidationError("Teacher, subject, and class must belong to the same school.")
+        for obj in [teacher, subject_class, class_department_assigned]:
+            if obj.school != school:
+                raise ValidationError("Teacher, subject, and class must belong to your school.")
 
         serializer.save(school=school)
 

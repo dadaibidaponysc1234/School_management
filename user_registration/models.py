@@ -417,17 +417,17 @@ class TeacherAssignment(models.Model):
     """
     teacher_subject_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     teacher = models.ForeignKey('Teacher', on_delete=models.SET_NULL, null=True, blank=True, related_name="subject_assignments")
-    subject = models.ForeignKey('SubjectClass', on_delete=models.CASCADE, related_name="teacher_assignments")
-    class_assigned = models.ForeignKey('ClassDepartment', on_delete=models.CASCADE, related_name="teacher_assignments")
+    subject_class = models.ForeignKey('SubjectClass', on_delete=models.CASCADE, related_name="teacher_assignments")
+    class_department_assigned = models.ForeignKey('ClassDepartment', on_delete=models.CASCADE, related_name="teacher_assignments")
     school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="teacher_assignments")
     
     # availability = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         teacher_name = self.teacher.first_name if self.teacher else "NoTeacher"
-        class_arm = self.class_assigned.classes.arm_name if self.class_assigned and self.class_assigned.classes else "NoClass"
-        subject_name = self.subject.subject.name if self.subject and self.subject.subject else "NoSubject"
-        dept_name = self.subject.department.name if self.subject and self.subject.department else "NoDept"
+        class_arm = self.class_department_assigned.classes.arm_name if self.class_department_assigned and self.class_department_assigned.classes else "NoClass"
+        subject_name = self.subject_class.subject.name if self.subject_class and self.subject_class.subject else "NoSubject"
+        dept_name = self.subject_class.department.name if self.subject_class and self.subject_class.department else "NoDept"
     
         return f"{teacher_name} {class_arm} - {subject_name} {dept_name}"
 

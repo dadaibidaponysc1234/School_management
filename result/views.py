@@ -342,8 +342,8 @@ class ScoreObtainedPerAssessmentListView(generics.ListAPIView):
             # Get all TeacherAssignments
             assignments = TeacherAssignment.objects.filter(teacher=teacher)
 
-            subject_classes = [a.subject for a in assignments]
-            class_arms = [a.class_assigned for a in assignments]
+            subject_classes = [a.subject_class for a in assignments]
+            class_arms = [a.class_department_assigned for a in assignments]
 
             registrations = StudentSubjectRegistration.objects.filter(
                 subject_class__in=subject_classes,
@@ -387,8 +387,8 @@ class ExamScoreListCreateView(generics.ListCreateAPIView):
         if hasattr(user, 'teacher'):
             teacher = user.teacher
             assignments = TeacherAssignment.objects.filter(teacher=teacher)
-            subject_classes = [a.subject for a in assignments]
-            class_arms = [a.class_assigned for a in assignments]
+            subject_classes = [a.subject_class for a in assignments]
+            class_arms = [a.class_department_assigned for a in assignments]
 
             registrations = StudentSubjectRegistration.objects.filter(
                 subject_class__in=subject_classes,
@@ -491,8 +491,8 @@ class ContinuousAssessmentListView(generics.ListAPIView):
         elif hasattr(user, 'teacher'):
             teacher = user.teacher
             assignments = TeacherAssignment.objects.filter(teacher=teacher)
-            subject_classes = [a.subject for a in assignments]
-            class_arms = [a.class_assigned for a in assignments]
+            subject_classes = [a.subject_class for a in assignments]
+            class_arms = [a.class_department_assigned for a in assignments]
 
             registrations = StudentSubjectRegistration.objects.filter(
                 subject_class__in=subject_classes,
@@ -541,8 +541,8 @@ class ContinuousAssessmentDetailView(generics.RetrieveAPIView):
         elif hasattr(user, 'teacher'):
             teacher = user.teacher
             assignments = TeacherAssignment.objects.filter(teacher=teacher)
-            subject_classes = [a.subject for a in assignments]
-            class_arms = [a.class_assigned for a in assignments]
+            subject_classes = [a.subject_class for a in assignments]
+            class_arms = [a.class_department_assigned for a in assignments]
 
             registrations = StudentSubjectRegistration.objects.filter(
                 subject_class__in=subject_classes,
@@ -607,8 +607,8 @@ class ResultListView(generics.ListAPIView):
         if hasattr(user, 'teacher'):
             teacher = user.teacher
             assignments = TeacherAssignment.objects.filter(teacher=teacher)
-            subject_classes = [a.subject for a in assignments]
-            class_arms = [a.class_assigned for a in assignments]
+            subject_classes = [a.subject_class for a in assignments]
+            class_arms = [a.class_department_assigned for a in assignments]
 
             registrations = StudentSubjectRegistration.objects.filter(
                 subject_class__in=subject_classes,
@@ -675,8 +675,8 @@ class AnnualResultListView(generics.ListAPIView):
         # Subject Teacher View
         if hasattr(user, 'teacher'):
             assignments = TeacherAssignment.objects.filter(teacher=user.teacher)
-            subject_classes = [a.subject for a in assignments]
-            class_arms = [a.class_assigned for a in assignments]
+            subject_classes = [a.subject_class for a in assignments]
+            class_arms = [a.class_department_assigned for a in assignments]
 
             registrations = StudentSubjectRegistration.objects.filter(
                 subject_class__in=subject_classes,

@@ -170,21 +170,21 @@ class TeacherAssignmentSerializer(serializers.ModelSerializer):
     """
     teacher_name = serializers.CharField(source='teacher.first_name', read_only=True)
     teacher_lastname = serializers.CharField(source='teacher.last_name', read_only=True)
-    subject_name = serializers.CharField(source='subject.subject.name', read_only=True)
-    class_name = serializers.CharField(source='class_assigned.classes.arm_name', read_only=True)
+    subject_name = serializers.CharField(source='subject_class.subject.name', read_only=True)
+    class_name = serializers.CharField(source='class_department_assigned.classes.arm_name', read_only=True)
     school_name = serializers.CharField(source='school.school_name', read_only=True)
-    department_name = serializers.CharField(source='subject.department.name', read_only=True)
+    department_name = serializers.CharField(source='subject_class.department.name', read_only=True)
 
     class Meta:
         model = TeacherAssignment
         fields = [
-            'teacher_subject_id', 'teacher', 'subject', 'class_assigned', 'school',
+            'teacher_subject_id', 'teacher', 'subject_class', 'class_department_assigned', 'school',
             'teacher_name', 'teacher_lastname', 'subject_name', 'class_name', 'school_name', 'department_name'
         ]
         extra_kwargs = {
             'teacher': {'write_only': True},
-            'subject': {'write_only': True},
-            'class_assigned': {'write_only': True},
+            'subject_class': {'write_only': True},
+            'class_department_assigned': {'write_only': True},
         }
         read_only_fields = ['teacher_subject_id', 'school']
         

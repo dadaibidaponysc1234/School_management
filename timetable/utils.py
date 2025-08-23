@@ -21,8 +21,8 @@ def fetch_data(school_id, days, periods_per_day, teacher_unavailability, constra
         if not assign.teacher:
             continue
         teacher_name = assign.teacher.user.username
-        subject_name = assign.subject.subject.name
-        class_arm = assign.class_assigned.classes.arm_name
+        subject_name = assign.subject_class.subject.name
+        class_arm = assign.class_department_assigned.classes.arm_name
         subjects[class_arm].add(subject_name)
         if teacher_name not in teachers:
             teachers[teacher_name] = {"subjects": {}, "availability": {}}

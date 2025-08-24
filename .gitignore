@@ -201,3 +201,4 @@ testdb.sqlite3
 before-push
 seed.py
 AttendanceDocumentation.md
+samplejson.txt

@@ -657,9 +657,14 @@ class TeacherAssignmentListCreateView(generics.ListCreateAPIView):
     serializer_class = TeacherAssignmentSerializer
     permission_classes = [IsschoolAdmin]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['teacher', 'subject', 'class_assigned', 'school']
-    search_fields = ['teacher.first_name', 'teacher.last_name', 'subject.subject.name', 'class_assigned.arm_name', 'subject.department.name']
-
+    filterset_fields = ['teacher', 'subject_class', 'class_department_assigned', 'school']
+    search_fields = [
+        'teacher__first_name', 'teacher__last_name',
+        'subject_class__subject__name',
+        'class_department_assigned__classes__arm_name',
+        'subject_class__department__name'
+    ]
+    
     def get_queryset(self):
         """
         Returns assignments only for the authenticated School Admin's school.

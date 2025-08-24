@@ -792,6 +792,8 @@ class TeacherBulkCreateView(APIView):
     """
     permission_classes = [IsschoolAdmin]
     parser_classes = [parsers.MultiPartParser]
+    serializer_class = TeacherCreateSerializer 
+
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -969,6 +971,7 @@ class DeleteMultipleTeachersView(APIView):
 
         deleted_count = Teacher.objects.filter(teacher_id__in=teacher_ids).delete()[0]
         return Response({"message": f"{deleted_count} teacher(s) deleted successfully."}, status=status.HTTP_200_OK)
+
 
 class TeacherDetailView(RetrieveAPIView):
     """

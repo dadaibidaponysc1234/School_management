@@ -4,14 +4,26 @@ meta {
   seq: 1
 }
 
-get {
-  url: http://127.0.0.1:8000/api/assignments/class_teachers/
-  body: none
-  auth: inherit
+post {
+  url: http://127.0.0.1:8000/api/assignments/teacher_assignments/
+  body: json
+  auth: bearer
 }
 
 headers {
   Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU1Mzk0MTQ0LCJpYXQiOjE3NTUzMDc3NDQsImp0aSI6IjM1ZDA4ZWJmMmI2MTRhYTJhMTA4ZTM0MTJjMjNjNTQ3IiwidXNlcl9pZCI6MzE2fQ.cT9RgMPgh7ufOdTZEjKmGEBVGSI1at1d2UychqAYg9k
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU1OTk0NzIxLCJpYXQiOjE3NTU5MDgzMjEsImp0aSI6ImIzMzU4MjkyNTJmMjQ2YzU5MTc5MmI2OGQzNjk3MTY4IiwidXNlcl9pZCI6MzE2fQ._q4kCbWm_fbA7fUUyotuquJF5vbrr4tSyW9zYrBiy4Y
+}
+
+body:json {
+  {
+    "teacher": "7f7e32aa-b7f6-4335-aae5-ac040ed3b031",
+    "subject_class": "d9085a34-337e-40af-b634-e8c0a24ce2ae",
+    "class_department_assigned": "fab0423c-d8a5-400a-9905-5ea54c305c43"
+  }
 }
 
 settings {

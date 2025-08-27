@@ -419,8 +419,8 @@ class StudentCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user_data = validated_data.pop('user')
-        class_year_id = validated_data.pop('class_year')
-        class_arm_id = validated_data.pop('class_arm')
+        # class_year_id = validated_data.pop('class_year')
+        # class_arm_id = validated_data.pop('class_arm')
 
         try:
             with transaction.atomic():
@@ -430,9 +430,9 @@ class StudentCreateSerializer(serializers.ModelSerializer):
                 student = Student.objects.create(user=user, **validated_data)
 
                 # Assign class to student
-                class_year = ClassYear.objects.get(class_year_id=class_year_id)
-                class_arm = ClassDepartment.objects.get(subject_class_id=class_arm_id)
-                StudentClass.objects.create(student=student, class_year=class_year, class_arm=class_arm)
+                # class_year = ClassYear.objects.get(class_year_id=class_year_id)
+                # class_arm = ClassDepartment.objects.get(subject_class_id=class_arm_id)
+                # StudentClass.objects.create(student=student, class_year=class_year, class_arm=class_arm)
 
                 return student
 

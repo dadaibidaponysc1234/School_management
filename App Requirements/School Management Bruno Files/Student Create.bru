@@ -1,0 +1,50 @@
+meta {
+  name: Student Create
+  type: http
+  seq: 4
+}
+
+post {
+  url: 127.0.01:8000/api/students/create/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU2MzU5Mjk0LCJpYXQiOjE3NTYyNzI4OTQsImp0aSI6ImY1NGZmMzEwOGIyZTQ5MDRhOTUxNTkwNzJlOTM3NDg3IiwidXNlcl9pZCI6MzE2fQ.D1aoRYIR6VsgvqP7M4ECe06PK2T3zdXkFzdnA-aPcYQ
+}
+
+body:json {
+  {
+    "user": {
+      "username": "studentuser1",
+      "email": "student1@example.com",
+      "password": "securepassword123"
+    },
+    "admission_number": "2025001",
+    "first_name": "John",
+    "middle_name": "Michael",
+    "last_name": "Doe",
+    "date_of_birth": "2010-05-15",
+    "gender": "Male",
+    "address": "123 Main Street",
+    "city": "Lagos",
+    "state": "Lagos",
+    "region": "South West",
+    "country": "Nigeria",
+    "admission_date": "2025-08-01",
+    "status": "active",
+    "profile_picture_path": null,
+    "parent_first_name": "Jane",
+    "parent_middle_name": "Ann",
+    "parent_last_name": "Doe",
+    "parent_occupation": "Engineer",
+    "parent_contact_info": "+2348012345678",
+    "parent_emergency_contact": "+2348098765432",
+    "parent_relationship": "Mother"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

@@ -95,6 +95,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
                 'schooladmin_id': school_admin.schooladmin_id,
                 'school_id': school_admin.school.id,
                 'school_name': school_admin.school.school_name,
+                'school_logo': school_admin.school.logo.url if school_admin.school.logo else None,
                 'surname': school_admin.surname,
                 'first_name': school_admin.first_name,
                 'email': school_admin.email,
@@ -117,7 +118,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             data['student'] = {
                 'student_id': student.student_id,
                 'school_id': student.school.id,
-                'school': student.school.school_name,
+                'school_name': student.school.school_name,
+                'school_logo': student.school.logo.url if student.school.logo else None,
                 'first_name': student.first_name,
                 'last_name': student.last_name,
                 'admission_number': student.admission_number,
@@ -134,6 +136,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             data['teacher'] = {
                 'teacher_id': teacher.teacher_id,
                 'school_id': teacher.school.id,
+                'school_name': teacher.school.school_name,
+                'school_logo': teacher.school.logo.url if teacher.school.logo else None,
                 'first_name': teacher.first_name,
                 'last_name': teacher.last_name,
                 'qualification': teacher.qualification,

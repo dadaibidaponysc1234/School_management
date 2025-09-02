@@ -611,25 +611,37 @@ class VerifyRegistrationPinView(APIView):
             return Response({'error': 'OTP and school ID are required.'}, status=400)
 
         try:
-            pin = StudentRegistrationPin.objects.get(otp=otp, school_id=school_id, is_used=False)
+            pin = StudentRegistrationPin.objects \
+                    .get(otp=otp, school_id=school_id, is_used=False)
         except StudentRegistrationPin.DoesNotExist:
             return Response({'error': 'Invalid or used OTP.'}, status=400)
 
         temp_token = generate_temp_token(pin.pin_id, otp)
-        # Fetch available class years and class arms for the school
-        class_years = ClassYear.objects.filter(school=pin.school)
-        class_arms = ClassDepartment.objects.filter(school=pin.school)
+
+        school = School.objects.prefetch_related("classes", "class_years").get(id=school_id)
 
         # Quick dictionary serialization (or you can use serializers if you want more control)
-        class_years_data = [{"id": str(cy.class_year_id), "name": cy.class_name} for cy in class_years]
-        class_arms_data = [{"id": str(ca.subject_class_id), "name": ca.classes.arm_name} for ca in class_arms]
+        class_years_data = []
+        for class_year in school.class_years.all():
+            class_arms_data = []
+            for _class in school.classes.filter(class_year=class_year):
+                class_arms_data.append({
+                    "class_id": _class.class_id,
+                    "arm_name": _class.arm_name
+                })
+
+            class_years_data.append({
+                "id": str(class_year.class_year_id),
+                "name": class_year.class_name,
+                "class_arms": class_arms_data
+            })
+
 
         # return Response({'message': 'Verification successful.', 'temp_token': temp_token}, status=200)
         return Response({
             'message': 'Verification successful.',
             'temp_token': temp_token,
             'class_years': class_years_data,
-            'class_arms': class_arms_data
         }, status=200)
 
 # from school_config.serializers import ClassYearSerializer, ClassDepartmentSerializer  # if you decide to use serializers

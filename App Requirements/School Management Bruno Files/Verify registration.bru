@@ -1,0 +1,22 @@
+meta {
+  name: Verify registration
+  type: http
+  seq: 6
+}
+
+post {
+  url: http://127.0.0.1:5000/api/registration/verify/
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "school_id": "aec568f3-b19a-4496-b3c8-a2cc30d2050c",
+    "otp": "555555"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

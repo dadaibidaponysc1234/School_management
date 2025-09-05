@@ -271,10 +271,16 @@ class SubjectListCreateView(generics.ListCreateAPIView):
         Supports filtering by department ID.
         """
         # Short-circuit during schema generation or when unauthenticated
-        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False):
             return Subject.objects.none()
 
-        school = self.request.user.school_admin.school
+        if hasattr(self.request.user, 'teacher'):
+            school = self.request.user.teacher.school
+        elif hasattr(self.request.user, 'school_admin'):
+            school = self.request.user.school_admin.school
+        elif hasattr(self.request.user, 'student'):
+            school = self.request.user.student.school
+
         queryset = Subject.objects.filter(school=school)
 
         # Filter by department if department_id is provided in the query params

@@ -1,0 +1,19 @@
+meta {
+  name: school subjects Test copy
+  type: http
+  seq: 10
+}
+
+get {
+  url: http://127.0.0.1:8000/api/school_config/subjects/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU3MjAwNjk2LCJpYXQiOjE3NTcxMTQyOTYsImp0aSI6IjVmYzJkZmQxNzgyZjRmMTdiMGExYTBkY2FkNWM3N2FmIiwidXNlcl9pZCI6MTYwfQ.MQ_Src6W3FRoGRjugzelqi7Fuu4gbl7pVE06BMdm1G0
+}
+
+settings {
+  encodeUrl: true
+}

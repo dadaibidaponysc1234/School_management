@@ -790,7 +790,7 @@ class StudentSubjectRegistrationListCreateView(generics.ListCreateAPIView):
     Students can register only themselves.
     """
     serializer_class = StudentSubjectRegistrationSerializer
-    permission_classes = [IsAuthenticated & (IsschoolAdmin | ISstudent | IsClassTeacher)]
+    permission_classes = [IsschoolAdmin | ISstudent | IsClassTeacher]
 
     def get_queryset(self):
         user = self.request.user
@@ -836,7 +836,7 @@ class StudentSubjectRegistrationDetailView(generics.RetrieveUpdateDestroyAPIView
     """
     serializer_class = StudentSubjectRegistrationSerializer
     lookup_field = 'registration_id'
-    permission_classes = [IsAuthenticated & (IsschoolAdmin | IsClassTeacher | ISstudent)]
+    permission_classes = [IsschoolAdmin | IsClassTeacher | ISstudent]
 
     def get_queryset(self):
         user = self.request.user

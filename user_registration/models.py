@@ -283,7 +283,7 @@ class Student(models.Model):
     student_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="student")
     school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="school_students")
-    admission_number = models.IntegerField( verbose_name="Admission Number",
+    admission_number = models.IntegerField(verbose_name="Admission Number",
                                            help_text="Unique number assigned to the student upon admission")
     first_name = models.CharField(max_length=50)
     middle_name = models.CharField(max_length=50, null=True, blank=True)

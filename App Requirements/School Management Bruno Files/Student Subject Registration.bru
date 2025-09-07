@@ -4,10 +4,22 @@ meta {
   seq: 9
 }
 
-get {
+post {
   url: http://127.0.0.1:8000/api/assignments/student-subject-registrations/
-  body: none
-  auth: inherit
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU3MjAwNjk2LCJpYXQiOjE3NTcxMTQyOTYsImp0aSI6IjVmYzJkZmQxNzgyZjRmMTdiMGExYTBkY2FkNWM3N2FmIiwidXNlcl9pZCI6MTYwfQ.MQ_Src6W3FRoGRjugzelqi7Fuu4gbl7pVE06BMdm1G0
+}
+
+body:json {
+  {
+    "student_class": "ffe0b2db-6d70-4c2e-982b-6bdd27712e2f",
+    "subject_class": "ffd563ab-f930-4b3c-83bd-d74c967c4201",
+    "status": "Approved"
+  }
 }
 
 settings {

@@ -216,6 +216,7 @@ class StudentClassSerializer(serializers.ModelSerializer):
 
 class StudentSubjectRegistrationSerializer(serializers.ModelSerializer):
     # Related fields for better readability
+    student_id = serializers.UUIDField(source='student_class.student.student_id', read_only=True)
     student_firstname = serializers.CharField(source='student_class.student.first_name', read_only=True)
     student_surname = serializers.CharField(source='student_class.student.last_name', read_only=True)
     student_admission_number = serializers.CharField(source='student_class.student.admission_number', read_only=True)
@@ -223,6 +224,7 @@ class StudentSubjectRegistrationSerializer(serializers.ModelSerializer):
     class_arm = serializers.CharField(source='student_class.class_arm.classes.arm_name', read_only=True)
     department = serializers.CharField(source='subject_class.department.name', read_only=True)
     subject_name = serializers.CharField(source='subject_class.subject.name', read_only=True)
+    subject_id = serializers.UUIDField(source='subject_class.subject.subject_id', read_only=True)
     term_name = serializers.CharField(source='term.name', read_only=True)
     school_name = serializers.CharField(source='school.school_name', read_only=True)
     student_name = serializers.SerializerMethodField()
@@ -232,14 +234,14 @@ class StudentSubjectRegistrationSerializer(serializers.ModelSerializer):
         fields = [
             'registration_id', 'student_class', 'subject_class', 'term', 'school',
             'status', 'created_at', 'updated_at',
-            'student_firstname', 'student_surname', 'student_admission_number',
+            'student_id', 'student_firstname', 'student_surname', 'student_admission_number',
             'student_name', 'class_year', 'class_arm', 'department',
-            'subject_name', 'term_name', 'school_name'
+            'subject_id', 'subject_name', 'term_name', 'school_name'
         ]
         read_only_fields = [
             'term', 'school', 'created_at', 'updated_at',
-            'student_admission_number', 'student_name', 'class_year',
-            'class_arm', 'department', 'subject_name', 'term_name', 'school_name'
+            # 'student_admission_number', 'student_name', 'class_year',
+            # 'class_arm', 'department', 'subject_name', 'term_name', 'school_name'
         ]
 
     def get_student_name(self, obj):

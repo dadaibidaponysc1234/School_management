@@ -484,7 +484,7 @@ class ClassTeacherListView(generics.ListAPIView):
         return ClassTeacher.objects.filter(school=school)
 
 
-class ClassTeacherUpdateView(generics.RetrieveUpdateAPIView):
+class ClassTeacherUpdateDeleteView(generics.RetrieveDestroyAPIView):
     """
     Update a class-teacher assignment.
     """

@@ -4,7 +4,7 @@ from .views import (YearListCreateView, YearDetailView, TermListCreateView,
                     ClassListCreateView, ClassDetailView,ClassroomListCreateView, ClassroomDetailView,
                     DepartmentListCreateView, DepartmentDetailView,SubjectListCreateView, SubjectDetailView,
                     ClassTeacherListCreateView,TeacherAssignmentListCreateView, 
-                    TeacherAssignmentDetailView,BulkClassTeacherCreateView,ClassTeacherListView,ClassTeacherUpdateView,DeleteMultipleClassTeachersView,
+                    TeacherAssignmentDetailView,BulkClassTeacherCreateView,ClassTeacherListView,ClassTeacherUpdateDeleteView,DeleteMultipleClassTeachersView,
                     SubjectClassListCreateView, SubjectClassDetailView, ClassDepartmentListCreateView,
                     ClassDepartmentDetailView, StudentClassListView, StudentClassUpdateView,StudentSubjectRegistrationListCreateView,
                     StudentSubjectRegistrationDetailView, SubjectRegistrationControlView,UpdateSubjectRegistrationStatusView,
@@ -43,7 +43,7 @@ urlpatterns = [
     path('assignments/class_teachers/', ClassTeacherListView.as_view(), name='class-teacher-list'),
 
     # Update a Single Class-Teacher Assignment
-    path('assignments/class_teachers/<uuid:pk>/', ClassTeacherUpdateView.as_view(), name='class-teacher-update'),
+    path('assignments/class_teachers/<uuid:pk>/', ClassTeacherUpdateDeleteView.as_view(), name='class-teacher-update'),
 
     # Delete Multiple Class-Teacher Assignments
     path('assignments/class_teachers/delete-multiple/', DeleteMultipleClassTeachersView.as_view(), name='delete-multiple-class-teachers'),

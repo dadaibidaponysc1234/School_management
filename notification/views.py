@@ -39,7 +39,7 @@ class NotificationDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     serializer_class = NotificationSerializer
     # Allow School Admins, Teachers, or Students (OR, not AND)
-    permission_classes = [SchoolAdminOrIsClassTeacherOrISstudent]
+    permission_classes = [ISteacher or ISstudent or IsschoolAdmin]
 
     def get_queryset(self):
         # Only allow access to notifications in the authenticated user's school
@@ -74,7 +74,7 @@ class TeacherAndEveryoneNotificationView(generics.ListAPIView):
     """
     serializer_class = NotificationSerializer
     # School Admins or Teachers can view
-    permission_classes = [SchoolAdminOrIsClassTeacherOrISstudent]
+    permission_classes = [ISteacher or ISstudent or IsschoolAdmin]
 
     def get_queryset(self):
         if getattr(self, 'swagger_fake_view', False) or not getattr(self, 'request', None) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
@@ -91,7 +91,7 @@ class StudentAndEveryoneNotificationView(generics.ListAPIView):
     """
     serializer_class = NotificationSerializer
     # School Admins or Students can view
-    permission_classes = [SchoolAdminOrIsClassTeacherOrISstudent]
+    permission_classes = [ISteacher or ISstudent or IsschoolAdmin]
 
     def get_queryset(self):
         if getattr(self, 'swagger_fake_view', False) or not getattr(self, 'request', None) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):

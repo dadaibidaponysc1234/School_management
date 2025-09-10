@@ -1,0 +1,19 @@
+meta {
+  name: Notifications
+  type: http
+  seq: 14
+}
+
+get {
+  url: http://127.0.0.1:5000/api/notifications/student-and-everyone/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU3NjM0MDA2LCJpYXQiOjE3NTc1NDc2MDYsImp0aSI6ImQwMmZlOTYyMzlmMTRjMTdiZDkxNmM1NzIwOTExNzdkIiwidXNlcl9pZCI6NDc5fQ.uGsLO3FiSGjM-6w9ke8mvg1yALW5w5Cphsyu3wZ0wOk
+}
+
+settings {
+  encodeUrl: true
+}

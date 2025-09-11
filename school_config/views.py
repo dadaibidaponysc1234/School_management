@@ -17,7 +17,7 @@ from .serializers import (YearSerializer,TermSerializer,ClassYearSerializer,
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status,generics, permissions, parsers,filters
+from rest_framework import status, generics, permissions, filters, exceptions
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -875,13 +875,21 @@ class SubjectRegistrationControlView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsschoolAdmin]
 
     def get_object(self):
-        # Automatically fetch the registration control for the admin's school
-        return self.request.user.school_admin.school.registration_control
+        school = getattr(self.request.user.school_admin, "school", None)
+        if not school:
+            raise exceptions.PermissionDenied("No school found for this admin.")
 
+        registration_control = getattr(school, "registration_control", None)
+        if not registration_control:
+            raise exceptions.NotFound("Create a Registration Control first.")
+
+        return registration_control
+    
     def get_serializer_class(self):
         if self.request.method == 'GET':
             return SubjectRegistrationControlSerializer
         return SubjectRegistrationControlUpdateSerializer
+
 
 class UpdateSubjectRegistrationStatusView(generics.UpdateAPIView):
     """

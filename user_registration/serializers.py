@@ -192,11 +192,13 @@ class SuperAdminSerializer(serializers.ModelSerializer):
     """
     Serializer for viewing, updating, and deleting a SuperAdmin profile.
     """
+    email = serializers.EmailField(source='user.email')
     class Meta:
         model = SuperAdmin
         fields = [
             'id',
             'user',
+            'email',
             'surname',
             'first_name',
             'middle_name',
@@ -205,7 +207,7 @@ class SuperAdminSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at',
         ]
-        read_only_fields = ['id', 'user', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'user', 'email', 'created_at', 'updated_at']
 
 
 # ==================================================================================

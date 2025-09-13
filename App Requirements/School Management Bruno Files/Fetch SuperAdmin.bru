@@ -4,10 +4,28 @@ meta {
   seq: 15
 }
 
-get {
-  url: http://127.0.0.1:8000/api/superadmins
-  body: none
-  auth: inherit
+put {
+  url: http://127.0.0.1:8000/api/superadmins/78e070f4-d5b2-47ee-b7b9-a983f7f4c3b7/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU3ODc3Mjc5LCJpYXQiOjE3NTc3OTA4NzksImp0aSI6Ijc2NmZkNmU1NzhmZDRjOWJhYjczZGJkYWQ0NTk1NjMzIiwidXNlcl9pZCI6MzE2fQ.8mSwjKhjgDksPbn5AAEkaEieGTQtTDRlW01GQuwFAVM
+}
+
+body:json {
+  {
+    "user": 1,
+    "email": "superadmin@example.com",
+    "surname": "Harrington",
+    "first_name": "Joshua",
+    "middle_name": "Sylvia",
+    "phone_number": "10663876686",
+    "address": "0080 Edward Mission",
+    "created_at": "2025-08-16T02:17:51.422114+01:00",
+    "updated_at": "2025-08-16T02:17:51.422175+01:00"
+  }
 }
 
 settings {

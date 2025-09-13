@@ -1,0 +1,32 @@
+meta {
+  name: Update terms
+  type: http
+  seq: 17
+}
+
+patch {
+  url: http://127.0.0.1:8000/api/school_config/terms/f69787ad-9c33-417a-a019-687276b05f9a/
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU3ODc3Mjc5LCJpYXQiOjE3NTc3OTA4NzksImp0aSI6Ijc2NmZkNmU1NzhmZDRjOWJhYjczZGJkYWQ0NTk1NjMzIiwidXNlcl9pZCI6MzE2fQ.8mSwjKhjgDksPbn5AAEkaEieGTQtTDRlW01GQuwFAVM
+}
+
+body:json {
+  {
+    "term_id": "f69787ad-9c33-417a-a019-687276b05f9a",
+    "name": "First Term",
+    "start_date": "2025-09-03",
+    "end_date": "2025-11-30",
+    "year": "443c8dbd-b193-485a-983c-9abeef867411",
+    "school": "6d8c81e7-2603-4007-8d87-1c8006ef6ad1",
+    "school_name": "Simon, Olson and Hayes School",
+    "status": true
+  }
+}
+
+settings {
+  encodeUrl: true
+}

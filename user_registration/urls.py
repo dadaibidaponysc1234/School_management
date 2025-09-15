@@ -66,8 +66,6 @@ urlpatterns = [
     path('students/detail/<uuid:pk>/', StudentDetailView.as_view(), name='student-detail'),
     path('students/delete-multiple/', DeleteMultipleStudentsView.as_view(), name='delete-multiple-students'),
     
-
-
     path('teachers/create/', TeacherCreateView.as_view(), name='teacher-create'),
     path('teachers/bulk_create/', TeacherBulkCreateView.as_view(), name='teacher-bulk-create'),
     path('teachers/self-register/', TeacherSelfRegistrationView.as_view(), name='teacher-self-register'),

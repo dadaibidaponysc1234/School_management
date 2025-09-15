@@ -1,0 +1,54 @@
+meta {
+  name: Delete stuff
+  type: http
+  seq: 18
+}
+
+get {
+  url: https://schoolapp-algorithmxcomp.pythonanywhere.com/api/students/create/
+  body: json
+  auth: bearer
+}
+
+headers {
+  : 
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU4MDY1OTQ2LCJpYXQiOjE3NTc5Nzk1NDYsImp0aSI6IjdhODM5N2Q2M2E3ZTQ2NmJiMWI2YTIwZTJkOTZmNzY0IiwidXNlcl9pZCI6OX0.A8prd_g1GaIfZAwfkYihAH55RWqUSC-w7VnQtS-xb2k
+}
+
+body:json {
+  {
+    "user": {
+      "username": "studentuser1",
+      "email": "student1@example.com",
+      "password": "securepassword123"
+    },
+    "admission_number": "2025001",
+    "first_name": "John",
+    "middle_name": "Michael",
+    "last_name": "Doe",
+    "date_of_birth": "2010-05-15",
+    "gender": "Male",
+    "address": "123 Main Street",
+    "city": "Lagos",
+    "state": "Lagos",
+    "region": "South West",
+    "country": "Nigeria",
+    "admission_date": "2025-08-01",
+    "status": "active",
+    "profile_picture_path": null,
+    "parent_first_name": "Jane",
+    "parent_middle_name": "Ann",
+    "parent_last_name": "Doe",
+    "parent_occupation": "Engineer",
+    "parent_contact_info": "+2348012345678",
+    "parent_emergency_contact": "+2348098765432",
+    "parent_relationship": "Mother"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

@@ -408,8 +408,8 @@ class StudentCreateSerializer(serializers.ModelSerializer):
     user = UserSerializer()
     role = serializers.CharField(source='user_role.role.name', read_only=True)
     school = serializers.PrimaryKeyRelatedField(read_only=True)
-    # class_year = serializers.UUIDField(write_only=True)
-    # class_arm = serializers.UUIDField(write_only=True)
+    class_year = serializers.UUIDField(write_only=True)
+    class_arm = serializers.UUIDField(write_only=True)
 
     class Meta:
         model = Student
@@ -419,14 +419,14 @@ class StudentCreateSerializer(serializers.ModelSerializer):
             'region', 'country', 'admission_date', 'status', 'profile_picture_path',
             'parent_first_name', 'parent_middle_name', 'parent_last_name', 'parent_occupation',
             'parent_contact_info', 'parent_emergency_contact', 'parent_relationship',
-            # 'class_year', 'class_arm'
+            'class_year', 'class_arm'
         ]
         read_only_fields = ['student_id', 'role', 'school']
 
     def create(self, validated_data):
         user_data = validated_data.pop('user')
-        # class_year_id = validated_data.pop('class_year')
-        # class_arm_id = validated_data.pop('class_arm')
+        class_year_id = validated_data.pop('class_year')
+        class_arm_id = validated_data.pop('class_arm')
 
         try:
             with transaction.atomic():
@@ -436,9 +436,9 @@ class StudentCreateSerializer(serializers.ModelSerializer):
                 student = Student.objects.create(user=user, **validated_data)
 
                 # Assign class to student
-                # class_year = ClassYear.objects.get(class_year_id=class_year_id)
-                # class_arm = ClassDepartment.objects.get(subject_class_id=class_arm_id)
-                # StudentClass.objects.create(student=student, class_year=class_year, class_arm=class_arm)
+                class_year = ClassYear.objects.get(class_year_id=class_year_id)
+                class_arm = ClassDepartment.objects.get(subject_class_id=class_arm_id)
+                StudentClass.objects.create(student=student, class_year=class_year, class_arm=class_arm)
 
                 return student
 

@@ -140,6 +140,8 @@ class ComplianceVerification(models.Model):
     tax_identification_number = models.CharField(max_length=40)
     compliance = models.BooleanField(default=True)
     approved = models.BooleanField(default=False)
+    last_updated_on = models.DateTimeField(auto_now=True)
+    uploaded_on = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Compliance for {self.school.school_name}"

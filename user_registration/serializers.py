@@ -335,7 +335,7 @@ class ComplianceVerificationSerializer(serializers.ModelSerializer):
         model = ComplianceVerification
         fields = ['school','school_name','accreditation_certificates',
                   'proof_of_registration','tax_identification_number',
-                  'compliance','approved']  # Or specify the fields explicitly
+                  'compliance','approved', 'last_updated_on', 'uploaded_on']  # Or specify the fields explicitly
 
 # =================================================================================================
 class MessageSerializer(serializers.ModelSerializer):

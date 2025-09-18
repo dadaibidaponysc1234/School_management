@@ -741,7 +741,7 @@ class StudentClassListView(generics.ListAPIView):
     # permission_classes = [IsClassTeacher]
     permission_classes = [SchoolAdminOrIsClassTeacherOrISstudent]
 
-    def get_queryset(self):
+    def get_queryset(self): #gght
         # Short-circuit during schema generation or when unauthenticated
         if getattr(self, 'swagger_fake_view', False) or not getattr(self, 'request', None) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False):
             return StudentClass.objects.none()

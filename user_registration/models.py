@@ -432,7 +432,7 @@ class TeacherAssignment(models.Model):
         return f"{teacher_name} {class_arm} - {subject_name} {dept_name}"
 
 
-class StudentClass(models.Model):
+class StudentClass(models.Model): #gght
     student_class_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name="subject_class")
     class_year = models.ForeignKey('ClassYear', on_delete=models.CASCADE, related_name="subject_class")

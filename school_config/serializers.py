@@ -190,7 +190,7 @@ class TeacherAssignmentSerializer(serializers.ModelSerializer):
         
 #############################################################################################################
 
-class StudentClassSerializer(serializers.ModelSerializer):
+class StudentClassSerializer(serializers.ModelSerializer): #gght
     student_firstname = serializers.CharField(source='student.first_name', read_only=True)
     student_surname = serializers.CharField(source='student.last_name', read_only=True)
     student_name = serializers.SerializerMethodField()

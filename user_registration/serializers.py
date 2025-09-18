@@ -438,7 +438,7 @@ class StudentCreateSerializer(serializers.ModelSerializer):
                 # Assign class to student
                 class_year = ClassYear.objects.get(class_year_id=class_year_id)
                 class_arm = ClassDepartment.objects.get(subject_class_id=class_arm_id)
-                StudentClass.objects.create(student=student, class_year=class_year, class_arm=class_arm)
+                StudentClass.objects.create(student=student, class_year=class_year, class_arm=class_arm) #gght
 
                 return student
 

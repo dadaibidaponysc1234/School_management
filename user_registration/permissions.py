@@ -203,3 +203,50 @@ class SchoolAdminOrIsClassTeacherOrISstudent(BasePermission):
 
         except Exception:
             return False
+
+
+
+class IsSchoolAdminOrIsTeacherOrIsStudent(BasePermission):
+    """
+    Grants access if the user is a School Admin, Class Teacher, or Student.
+    """
+
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+
+        try:
+            user_roles = UserRole.objects.filter(user=request.user)
+            role_names = [role.role.name for role in user_roles]
+
+            is_school_admin = 'School Admin' in role_names
+            is_student = 'Student' in role_names
+            is_teacher = 'Teacher' in role_names
+
+            return is_school_admin or is_teacher or is_student
+
+        except Exception:
+            return False
+        
+
+
+class IsSchoolAdminOrIsTeacher(BasePermission):
+    """
+    Grants access if the user is a School Admin, Class Teacher, or Student.
+    """
+
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+
+        try:
+            user_roles = UserRole.objects.filter(user=request.user)
+            role_names = [role.role.name for role in user_roles]
+
+            is_school_admin = 'School Admin' in role_names
+            is_teacher = 'Teacher' in role_names
+
+            return is_school_admin or is_teacher
+
+        except Exception:
+            return False

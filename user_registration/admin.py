@@ -22,8 +22,19 @@ admin.site.register(Period)
 admin.site.register(SubjectPeriodLimit)
 admin.site.register(Constraint)
 
+
+# Focused UserRole admin: add search only here as requested
+class UserRoleAdmin(admin.ModelAdmin):
+    list_display = ('user', 'role')
+    search_fields = ('user__username', 'user__email', 'role__name')
+
+
+# Register the focused UserRole admin
+admin.site.register(UserRole, UserRoleAdmin)
+
+
+# Keep simple registrations for the other models (no large ModelAdmin classes)
 admin.site.register(Role)
-admin.site.register(UserRole)
 admin.site.register(SuperAdmin)
 admin.site.register(School)
 admin.site.register(Subscription)

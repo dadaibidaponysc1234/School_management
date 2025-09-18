@@ -7,7 +7,7 @@ from .serializers import (
     NotificationUpdateSerializer
 )
 from rest_framework.response import Response
-from user_registration.permissions import (IsSuperAdmin,IsschoolAdmin,ISteacher,
+from user_registration.permissions import (IsSchoolAdminOrIsTeacher, IsSchoolAdminOrIsTeacherOrIsStudent, IsSuperAdmin,IsschoolAdmin,ISteacher,
                           ISstudent,IsSuperAdminOrSchoolAdmin,
                           HasValidPinAndSchoolId, SchoolAdminOrIsClassTeacherOrISstudent)
 
@@ -74,7 +74,7 @@ class TeacherAndEveryoneNotificationView(generics.ListAPIView):
     """
     serializer_class = NotificationSerializer
     # School Admins or Teachers can view
-    permission_classes = [ISteacher or ISstudent or IsschoolAdmin]
+    permission_classes = [IsSchoolAdminOrIsTeacher]
 
     def get_queryset(self):
         if getattr(self, 'swagger_fake_view', False) or not getattr(self, 'request', None) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
@@ -91,7 +91,7 @@ class StudentAndEveryoneNotificationView(generics.ListAPIView):
     """
     serializer_class = NotificationSerializer
     # School Admins or Students can view
-    permission_classes = [ISteacher or ISstudent or IsschoolAdmin]
+    permission_classes = [IsSchoolAdminOrIsTeacherOrIsStudent]
 
     def get_queryset(self):
         if getattr(self, 'swagger_fake_view', False) or not getattr(self, 'request', None) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):

@@ -550,7 +550,7 @@ class StudentBulkCreateView(APIView):
                         errors.append({"row": index + 1, "error": f"Invalid class year or arm: {row['class_year_name']}, {row['class_arm_name']}"})
                         continue
 
-                    student_class = StudentClass(
+                    student_class = StudentClass( #gght
                         student=student,
                         class_year=class_year,
                         class_arm=class_arm
@@ -713,7 +713,7 @@ class StudentSelfRegistrationView(generics.CreateAPIView):
         if not class_year or not class_arm:
             return Response({'error': 'Invalid class_year_name or class_arm_name.'}, status=400)
 
-        StudentClass.objects.create(
+        StudentClass.objects.create( #gght
             student=student,
             class_year=class_year,
             class_arm=class_arm

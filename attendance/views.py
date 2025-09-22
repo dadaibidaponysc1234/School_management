@@ -73,7 +73,7 @@ class AttendanceSessionViewSet(viewsets.ModelViewSet):
         class_obj = get_object_or_404(Class, pk=class_id)
         # Students enrolled in this class via StudentClass mapping
         student_ids = StudentClass.objects.filter(
-            class_arm__classes=class_obj #gght
+            klass=class_obj
         ).values_list("student_id", flat=True)
         students = Student.objects.filter(pk__in=student_ids)
         absentees_map = {str(r.get("student")): r for r in absentees if r.get("student")}

@@ -718,7 +718,7 @@ class ClassTeacherCommentListCreateView(generics.ListCreateAPIView):
         return ClassTeacherComment.objects.filter(
             classteacher=user.classteacher,
             term__is_active=True,
-            student__studentclass__class_year=assigned_class #gght
+            student__student_classes__klass=assigned_class #gght
         )
 
     def perform_create(self, serializer):
@@ -732,7 +732,7 @@ class ClassTeacherCommentListCreateView(generics.ListCreateAPIView):
         if not skills:
             raise serializers.ValidationError({"skills": "This field is required."})
 
-        if student.studentclass.class_year != assigned_class: #gght
+        if student.student_classes.klass != assigned_class: #gght
             raise serializers.ValidationError("This student is not in your assigned class.")
 
         generated_comment = "generate_teacher_comment(skills, gender=student.gender)"

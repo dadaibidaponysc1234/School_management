@@ -1,8 +1,9 @@
+from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import (
-                     Role, UserRole, SuperAdmin, School,Subscription,
+                     Class, Role, UserRole, SuperAdmin, School,Subscription,
                      ComplianceVerification,Message,SchoolAdmin,
                      ClassYear,Student,Teacher,StudentRegistrationPin,
                      ClassDepartment, StudentClass
@@ -425,8 +426,8 @@ class StudentCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user_data = validated_data.pop('user')
-        class_year_id = validated_data.pop('class_year')
-        class_arm_id = validated_data.pop('class_arm')
+        class_year = validated_data.pop('class_year')
+        class_arm = validated_data.pop('class_arm')
 
         try:
             with transaction.atomic():
@@ -436,9 +437,18 @@ class StudentCreateSerializer(serializers.ModelSerializer):
                 student = Student.objects.create(user=user, **validated_data)
 
                 # Assign class to student
-                class_year = ClassYear.objects.get(class_year_id=class_year_id)
-                class_arm = ClassDepartment.objects.get(subject_class_id=class_arm_id)
-                StudentClass.objects.create(student=student, class_year=class_year, class_arm=class_arm) #gght
+                # Get the class (klass) using year + arm
+                klass = get_object_or_404(
+                    Class,
+                    class_year=class_year,
+                    arm_name=class_arm
+                )
+
+                # Create StudentClass
+                StudentClass.objects.create(
+                    student=student,
+                    klass=klass
+                )
 
                 return student
 
@@ -467,8 +477,8 @@ class StudentUpdateSerializer(serializers.ModelSerializer):
 
     def update(self, validated_data):
         user_data = validated_data.pop('user')
-        class_year_id = validated_data.pop('class_year')
-        class_arm_id = validated_data.pop('class_arm')
+        class_year = validated_data.pop('class_year')
+        class_arm = validated_data.pop('class_arm')
 
         try:
             with transaction.atomic():
@@ -478,9 +488,18 @@ class StudentUpdateSerializer(serializers.ModelSerializer):
                 student = Student.objects.create(user=user, **validated_data)
 
                 # Assign class to student
-                class_year = ClassYear.objects.get(class_year_id=class_year_id)
-                class_arm = ClassDepartment.objects.get(subject_class_id=class_arm_id)
-                StudentClass.objects.create(student=student, class_year=class_year, class_arm=class_arm)
+                # Get the class (klass) using year + arm
+                klass = get_object_or_404(
+                    Class,
+                    class_year=class_year,
+                    arm_name=class_arm
+                )
+
+                # Create StudentClass
+                StudentClass.objects.create(
+                    student=student,
+                    klass=klass
+                )
 
                 return student
 

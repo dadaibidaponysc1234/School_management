@@ -755,7 +755,7 @@ class StudentClassListView(generics.ListAPIView):
         elif hasattr(user, 'teacher'):
             # Assuming ClassTeacher model exists and links teacher to a class
             class_ids = user.teacher.assigned_classes.values_list('class_assigned__class_id', flat=True)
-            return StudentClass.objects.filter(class_arm__classes__class_id__in=class_ids)
+            return StudentClass.objects.filter(klass__in=class_ids)
 
         elif hasattr(user, 'student'):
             return StudentClass.objects.filter(student=user.student)

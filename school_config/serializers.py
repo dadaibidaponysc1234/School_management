@@ -190,23 +190,72 @@ class TeacherAssignmentSerializer(serializers.ModelSerializer):
         
 #############################################################################################################
 
-class StudentClassSerializer(serializers.ModelSerializer): #gght
-    student_firstname = serializers.CharField(source='student.first_name', read_only=True)
-    student_surname = serializers.CharField(source='student.last_name', read_only=True)
+class StudentClassSerializer(serializers.ModelSerializer):
+    student_first_name = serializers.CharField(source='student.first_name', read_only=True)
+    student_last_name = serializers.CharField(source='student.last_name', read_only=True)
     student_name = serializers.SerializerMethodField()
-    class_year = serializers.CharField(source='class_year.class_years.class_name', read_only=True)
-    class_name = serializers.CharField(source='class_arm.classes.arm_name', read_only=True)
+    class_year_name = serializers.CharField(source="klass.class_year.class_name")
+
+    # Same names used for input and output
+    class_year = serializers.UUIDField()
+    class_arm = serializers.CharField()
 
     class Meta:
         model = StudentClass
         fields = [
-            'student_class_id', 'student', 'class_year', 'class_arm',
-            'student_firstname', 'student_surname', 'student_name', 'class_year'
-            ,'class_name'
+            'student_class_id',
+            'student',
+            'student_first_name',
+            'student_last_name',
+            'student_name',
+            'class_year',
+            'class_arm',
         ]
 
     def get_student_name(self, obj):
         return f"{obj.student.last_name} {obj.student.first_name}"
+
+    def to_representation(self, instance):
+        """Override how serializer outputs data"""
+        rep = super().to_representation(instance)
+        rep['class_year'] = instance.klass.class_year.class_name
+        rep['class_arm'] = instance.klass.arm_name
+        return rep
+
+    def create(self, validated_data):
+        class_year = validated_data.pop("class_year")
+        class_arm = validated_data.pop("class_arm")
+
+        try:
+            klass = Class.objects.get(
+                class_year__class_name=class_year,
+                arm_name=class_arm
+            )
+        except Class.DoesNotExist:
+            raise serializers.ValidationError(
+                {"klass": "No class found with the given year and arm."}
+            )
+
+        validated_data["klass"] = klass
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        class_year = validated_data.pop("class_year", None)
+        class_arm = validated_data.pop("class_arm", None)
+
+        if class_year and class_arm:
+            try:
+                klass = Class.objects.get(
+                    class_year__class_name=class_year,
+                    arm_name=class_arm
+                )
+                validated_data["klass"] = klass
+            except Class.DoesNotExist:
+                raise serializers.ValidationError(
+                    {"klass": "No class found with the given year and arm."}
+                )
+
+        return super().update(instance, validated_data)
 
 
 #############################################################################################################

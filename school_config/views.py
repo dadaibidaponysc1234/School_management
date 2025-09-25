@@ -1,11 +1,11 @@
 from django.shortcuts import render
-from user_registration.models import (Year,Term,ClassYear,Class,Classroom,
+from user_registration.models import (School, Student, SuperAdmin, Year,Term,ClassYear,Class,Classroom,
                      Teacher,Department,Subject,ClassTeacher,
                      TeacherAssignment,StudentSubjectRegistration,
                      SubjectClass,ClassDepartment,StudentClass, Day,Period,SubjectPeriodLimit,Constraint)
 
 
-from .serializers import (YearSerializer,TermSerializer,ClassYearSerializer,
+from .serializers import (SuperAdminMetricsSerializer, YearSerializer,TermSerializer,ClassYearSerializer,
                           ClassSerializer,ClassroomSerializer,DepartmentSerializer,
                           SubjectSerializer,ClassTeacherSerializer,TeacherAssignmentSerializer,
                            StudentSubjectRegistrationSerializer, StudentClassSerializer,
@@ -1023,3 +1023,20 @@ class ConstraintDetailView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         school = self.request.user.school_admin.school
         return Constraint.objects.get_or_create(school=school)[0]
+    
+
+class SuperAdminMetricsView(APIView):
+    permission_classes = [IsSuperAdmin]
+
+    def get(self, request):
+        data = {
+            "school_count": School.objects.count(),
+            "teacher_count": Teacher.objects.count(),
+            "student_count": Student.objects.count(),
+            "superadmin_count": SuperAdmin.objects.count(),
+            "student_male": Student.objects.filter(gender="M").count(),
+            "student_female": Student.objects.filter(gender="F").count(),
+        }
+
+        serializer = SuperAdminMetricsSerializer(data)
+        return Response(serializer.data)

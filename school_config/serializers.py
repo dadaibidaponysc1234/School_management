@@ -400,3 +400,13 @@ class ConstraintSerializer(serializers.ModelSerializer):
     class Meta:
         model = Constraint
         fields = ['school', 'fellowship_time', 'break_times']
+
+
+
+class SuperAdminMetricsSerializer(serializers.Serializer):
+    school_count = serializers.IntegerField()
+    teacher_count = serializers.IntegerField()
+    student_count = serializers.IntegerField()
+    superadmin_count = serializers.IntegerField()
+    student_male = serializers.IntegerField()
+    student_female = serializers.IntegerField()

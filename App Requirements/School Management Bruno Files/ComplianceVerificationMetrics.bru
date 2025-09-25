@@ -1,0 +1,19 @@
+meta {
+  name: ComplianceVerificationMetrics
+  type: http
+  seq: 21
+}
+
+get {
+  url: http://127.0.0.1:8000/api/metrics/compliance-verification/
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU4ODUzOTU1LCJpYXQiOjE3NTg3Njc1NTUsImp0aSI6ImRhNGVmNTU1M2RjYjRiMjBiMmFjOWYxYTdlMDFlYmFiIiwidXNlcl9pZCI6MjA5fQ.HKaErkoEU0GMr0fn40snXLq8yKxDczWtxF2qZP2V_VE
+}
+
+settings {
+  encodeUrl: true
+}

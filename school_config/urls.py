@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import (SuperAdminMetricsView, YearListCreateView, YearDetailView, TermListCreateView, 
+from .views import (ComplianceVerificationMetricsView, SuperAdminMetricsView, YearListCreateView, YearDetailView, TermListCreateView, 
                     TermDetailView,    ClassYearListCreateView, ClassYearDetailView,
                     ClassListCreateView, ClassDetailView,ClassroomListCreateView, ClassroomDetailView,
                     DepartmentListCreateView, DepartmentDetailView,SubjectListCreateView, SubjectDetailView,
@@ -69,5 +69,5 @@ urlpatterns = [
     path('assignments/subject-registration-status/<uuid:registration_id>/', UpdateSubjectRegistrationStatusView.as_view(), name='update-subject-registration-status'),
 
     path('metrics/superadmin/', SuperAdminMetricsView.as_view(), name="superadmin-metrics"),
-    # path('metrics/compliance/')
+    path("metrics/compliance-verification/", ComplianceVerificationMetricsView.as_view(), name="compliance-metrics"),
 ]

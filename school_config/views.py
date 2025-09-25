@@ -1,11 +1,11 @@
 from django.shortcuts import render
-from user_registration.models import (School, Student, SuperAdmin, Year,Term,ClassYear,Class,Classroom,
+from user_registration.models import (ComplianceVerification, School, Student, SuperAdmin, Year,Term,ClassYear,Class,Classroom,
                      Teacher,Department,Subject,ClassTeacher,
                      TeacherAssignment,StudentSubjectRegistration,
                      SubjectClass,ClassDepartment,StudentClass, Day,Period,SubjectPeriodLimit,Constraint)
 
 
-from .serializers import (SuperAdminMetricsSerializer, YearSerializer,TermSerializer,ClassYearSerializer,
+from .serializers import (ComplianceVerificationMetricsSerializer, SuperAdminMetricsSerializer, YearSerializer,TermSerializer,ClassYearSerializer,
                           ClassSerializer,ClassroomSerializer,DepartmentSerializer,
                           SubjectSerializer,ClassTeacherSerializer,TeacherAssignmentSerializer,
                            StudentSubjectRegistrationSerializer, StudentClassSerializer,
@@ -1039,4 +1039,50 @@ class SuperAdminMetricsView(APIView):
         }
 
         serializer = SuperAdminMetricsSerializer(data)
+        return Response(serializer.data)
+    
+
+
+class ComplianceVerificationMetricsView(APIView):
+    permission_classes = [IsSuperAdmin]
+    
+    def get(self, request):
+        # Pending counts
+        pending_tax_id = ComplianceVerification.objects.filter(
+            tax_identification_number__isnull=True
+        ).count() + ComplianceVerification.objects.filter(
+            tax_identification_number=""
+        ).count()
+
+        pending_accreditation_cert = ComplianceVerification.objects.filter(
+            accreditation_certificates__isnull=True
+        ).count()
+
+        pending_proof_of_reg = ComplianceVerification.objects.filter(
+            proof_of_registration__isnull=True
+        ).count()
+
+        # Completed counts
+        completed_tax_id = ComplianceVerification.objects.exclude(
+            tax_identification_number__isnull=True
+        ).exclude(tax_identification_number="").count()
+
+        completed_accreditation_cert = ComplianceVerification.objects.exclude(
+            accreditation_certificates__isnull=True
+        ).count()
+
+        completed_proof_of_reg = ComplianceVerification.objects.exclude(
+            proof_of_registration__isnull=True
+        ).count()
+
+        data = {
+            "pending_tax_id": pending_tax_id,
+            "pending_accreditation_cert": pending_accreditation_cert,
+            "pending_proof_of_reg": pending_proof_of_reg,
+            "completed_tax_id": completed_tax_id,
+            "completed_accreditation_cert": completed_accreditation_cert,
+            "completed_proof_of_reg": completed_proof_of_reg,
+        }
+
+        serializer = ComplianceVerificationMetricsSerializer(data)
         return Response(serializer.data)

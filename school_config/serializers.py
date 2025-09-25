@@ -410,3 +410,13 @@ class SuperAdminMetricsSerializer(serializers.Serializer):
     superadmin_count = serializers.IntegerField()
     student_male = serializers.IntegerField()
     student_female = serializers.IntegerField()
+
+
+
+class ComplianceVerificationMetricsSerializer(serializers.Serializer):
+    pending_tax_id = serializers.IntegerField()
+    pending_accreditation_cert = serializers.IntegerField()
+    pending_proof_of_reg = serializers.IntegerField()
+    completed_tax_id = serializers.IntegerField()
+    completed_accreditation_cert = serializers.IntegerField()
+    completed_proof_of_reg = serializers.IntegerField()

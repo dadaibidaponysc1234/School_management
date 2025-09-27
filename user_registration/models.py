@@ -508,32 +508,6 @@ class StudentSubjectRegistration(models.Model):
         return f"{self.student_class.student.last_name} - {self.subject_class.subject.name} ({self.term.name})"
     
 
-
-# class StudentSubjectAssignment(models.Model):
-    # """
-    # Tracks subject assignments for students.
-    # """
-    # assignment_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    # student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name="subject_assignments")
-    # subject = models.ForeignKey('Subject', on_delete=models.CASCADE, related_name="student_assignments")
-    # class_assigned = models.ForeignKey('Class', on_delete=models.CASCADE, related_name="student_subject_assignments")
-    # term = models.ForeignKey('Term', on_delete=models.CASCADE, related_name="student_subject_assignments")
-    # year = models.ForeignKey('Year', on_delete=models.CASCADE, related_name="student_subject_assignments")
-    # school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="student_subject_assignments")
-    # assigned_by = models.ForeignKey('ClassTeacher', on_delete=models.SET_NULL, null=True, related_name="assigned_students")
-    # assignment_date = models.DateTimeField(auto_now_add=True)
-    # status = models.CharField(max_length=20, choices=[
-    #     ('Pending', 'Pending'),
-    #     ('Approved', 'Approved'),
-    #     ('Rejected', 'Rejected')
-    # ], default='Pending')
-    # status_updated_at = models.DateTimeField(null=True, blank=True)
-    # rejection_reason = models.TextField(null=True, blank=True)
-
-    # def __str__(self):
-    #     return f"{self.student.first_name} - {self.subject.name} ({self.status})"
-    # pass
-
 ################ RESULT MODULE ##################
 class ResultVisibilityControl(models.Model):
     school = models.OneToOneField('School', on_delete=models.CASCADE, related_name='result_visibility_control')

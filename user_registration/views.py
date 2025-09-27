@@ -39,6 +39,9 @@ from rest_framework.parsers import MultiPartParser
 from .utils import generate_temp_token, validate_temp_token
 from django.utils.crypto import get_random_string
 import pandas as pd
+from django.db.models import Prefetch
+
+
 
 
 
@@ -599,52 +602,140 @@ class GenerateRegistrationPinsView(APIView):
 
         return Response({'message': 'Pins generated successfully.', 'pins': pins}, status=201)
 
+# class VerifyRegistrationPinView(APIView):
+#     """
+#     Verify OTP and School ID for student registration.
+#     """
+#     def post(self, request, *args, **kwargs):
+#         otp = request.data.get('otp')
+#         school_id = request.data.get('school_id')
+
+#         if not otp or not school_id:
+#             return Response({'error': 'OTP and school ID are required.'}, status=400)
+
+#         try:
+#             pin = StudentRegistrationPin.objects \
+#                     .get(otp=otp, school_id=school_id, is_used=False)
+#         except StudentRegistrationPin.DoesNotExist:
+#             return Response({'error': 'Invalid or used OTP.'}, status=400)
+
+#         temp_token = generate_temp_token(pin.pin_id, otp)
+
+#         school = School.objects.prefetch_related("classes", "class_years").get(id=school_id)
+
+#         # Quick dictionary serialization (or you can use serializers if you want more control)
+#         class_years_data = []
+#         for class_year in school.class_years.all():
+#             class_arms_data = []
+#             for _class in school.classes.filter(class_year=class_year):
+#                 class_arms_data.append({
+#                     "class_id": _class.class_id,
+#                     "arm_name": _class.arm_name
+#                 })
+
+#             class_years_data.append({
+#                 "id": str(class_year.class_year_id),
+#                 "name": class_year.class_name,
+#                 "class_arms": class_arms_data
+#             })
+
+
+#         # return Response({'message': 'Verification successful.', 'temp_token': temp_token}, status=200)
+#         return Response({
+#             'message': 'Verification successful.',
+#             'temp_token': temp_token,
+#             'class_years': class_years_data,
+#         }, status=200)
+
+# from school_config.serializers import ClassYearSerializer, ClassDepartmentSerializer  # if you decide to use serializers
+
+
+
+# assuming your models are School, ClassYear, Class, StudentRegistrationPin
+# and you have generate_temp_token(pin_id, otp)
+
 class VerifyRegistrationPinView(APIView):
     """
-    Verify OTP and School ID for student registration.
+    Verify OTP and School ID for student registration, then return
+    a temp token and the school's class-years with their arms.
     """
+
     def post(self, request, *args, **kwargs):
-        otp = request.data.get('otp')
+        otp = (request.data.get('otp') or '').strip()
         school_id = request.data.get('school_id')
 
         if not otp or not school_id:
-            return Response({'error': 'OTP and school ID are required.'}, status=400)
+            return Response(
+                {'error': 'OTP and school ID are required.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        try:
-            pin = StudentRegistrationPin.objects \
-                    .get(otp=otp, school_id=school_id, is_used=False)
-        except StudentRegistrationPin.DoesNotExist:
-            return Response({'error': 'Invalid or used OTP.'}, status=400)
+        # Look up an unused pin for that school
+        pin = (
+            StudentRegistrationPin.objects
+            .filter(otp=otp, school_id=school_id, is_used=False)
+            .first()
+        )
+        if not pin:
+            return Response(
+                {'error': 'Invalid or used OTP.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # (Optional, if you track expiry/max attempts)
+        # if pin.is_expired():
+        #     return Response({'error': 'OTP has expired.'}, status=status.HTTP_400_BAD_REQUEST)
 
         temp_token = generate_temp_token(pin.pin_id, otp)
 
-        school = School.objects.prefetch_related("classes", "class_years").get(id=school_id)
+        # Efficiently fetch all class_years and their classes (arms) in ONE go
+        school_qs = (
+            School.objects
+            .prefetch_related(
+                Prefetch(
+                    "class_years",
+                    queryset=ClassYear.objects.order_by("class_name").prefetch_related(
+                        Prefetch(
+                            "classes",
+                            queryset=Class.objects.only("class_id", "arm_name", "class_year")
+                                                .order_by("arm_name")
+                        )
+                    )
+                )
+            )
+        )
 
-        # Quick dictionary serialization (or you can use serializers if you want more control)
-        class_years_data = []
-        for class_year in school.class_years.all():
-            class_arms_data = []
-            for _class in school.classes.filter(class_year=class_year):
-                class_arms_data.append({
-                    "class_id": _class.class_id,
-                    "arm_name": _class.arm_name
-                })
+        try:
+            school = school_qs.get(id=school_id)
+        except School.DoesNotExist:
+            # If the pin exists but the school was deleted/mismatched, treat as bad request
+            return Response(
+                {'error': 'School not found or mismatch.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-            class_years_data.append({
-                "id": str(class_year.class_year_id),
-                "name": class_year.class_name,
-                "class_arms": class_arms_data
-            })
+        # Build response payload using prefetched data (no extra queries)
+        class_years_data = [
+            {
+                "id": str(cy.class_year_id),
+                "name": cy.class_name,
+                "class_arms": [
+                    {"class_id": str(c.class_id), "arm_name": c.arm_name}
+                    for c in cy.classes.all()
+                ],
+            }
+            for cy in school.class_years.all()
+        ]
 
+        return Response(
+            {
+                'message': 'Verification successful.',
+                'temp_token': temp_token,
+                'class_years': class_years_data,
+            },
+            status=status.HTTP_200_OK
+        )
 
-        # return Response({'message': 'Verification successful.', 'temp_token': temp_token}, status=200)
-        return Response({
-            'message': 'Verification successful.',
-            'temp_token': temp_token,
-            'class_years': class_years_data,
-        }, status=200)
-
-# from school_config.serializers import ClassYearSerializer, ClassDepartmentSerializer  # if you decide to use serializers
 
 
 class ListRegistrationPinsView(generics.ListAPIView):

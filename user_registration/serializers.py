@@ -410,7 +410,7 @@ class StudentCreateSerializer(serializers.ModelSerializer):
     role = serializers.CharField(source='user_role.role.name', read_only=True)
     school = serializers.PrimaryKeyRelatedField(read_only=True)
     class_year = serializers.UUIDField(write_only=True)
-    class_arm = serializers.UUIDField(write_only=True)
+    class_arm = serializers.CharField(write_only=True)
 
     class Meta:
         model = Student

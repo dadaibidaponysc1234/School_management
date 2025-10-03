@@ -1,4 +1,1424 @@
-is there anything like class department? i got this error in student self registration <h1>ValueError
-       at /api/students/self-register/</h1>
-  <pre class="exception_value">Cannot assign &quot;&lt;Class: A (Jss3) - Foursquare International&gt;&quot;: &quot;StudentClass.class_arm&quot; must be a &quot;ClassDepartment&quot; instance.</pre>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="robots" content="NONE,NOARCHIVE">
+  <title>OperationalError
+          at /api/schools/compliance-verification/</title>
+  <style>
+    html * { padding:0; margin:0; }
+    body * { padding:10px 20px; }
+    body * * { padding:0; }
+    body { font-family: sans-serif; background-color:#fff; color:#000; }
+    body > :where(header, main, footer) { border-bottom:1px solid #ddd; }
+    h1 { font-weight:normal; }
+    h2 { margin-bottom:.8em; }
+    h3 { margin:1em 0 .5em 0; }
+    h4 { margin:0 0 .5em 0; font-weight: normal; }
+    code, pre { font-size: 100%; white-space: pre-wrap; word-break: break-word; }
+    summary { cursor: pointer; }
+    table { border:1px solid #ccc; border-collapse: collapse; width:100%; background:white; }
+    tbody td, tbody th { vertical-align:top; padding:2px 3px; }
+    thead th {
+      padding:1px 6px 1px 3px; background:#fefefe; text-align:left;
+      font-weight:normal; font-size: 0.6875rem; border:1px solid #ddd;
+    }
+    tbody th { width:12em; text-align:right; color:#666; padding-right:.5em; }
+    table.vars { margin:5px 10px 2px 40px; width: auto; }
+    table.vars td, table.req td { font-family:monospace; }
+    table td.code { width:100%; }
+    table td.code pre { overflow:hidden; }
+    table.source th { color:#666; }
+    table.source td { font-family:monospace; white-space:pre; border-bottom:1px solid #eee; }
+    ul.traceback { list-style-type:none; color: #222; }
+    ul.traceback li.cause { word-break: break-word; }
+    ul.traceback li.frame { padding-bottom:1em; color:#4f4f4f; }
+    ul.traceback li.user { background-color:#e0e0e0; color:#000 }
+    div.context { padding:10px 0; overflow:hidden; }
+    div.context ol { padding-left:30px; margin:0 10px; list-style-position: inside; }
+    div.context ol li { font-family:monospace; white-space:pre; color:#777; cursor:pointer; padding-left: 2px; }
+    div.context ol li pre { display:inline; }
+    div.context ol.context-line li { color:#464646; background-color:#dfdfdf; padding: 3px 2px; }
+    div.context ol.context-line li span { position:absolute; right:32px; }
+    .user div.context ol.context-line li { background-color:#bbb; color:#000; }
+    .user div.context ol li { color:#666; }
+    div.commands, summary.commands { margin-left: 40px; }
+    div.commands a, summary.commands { color:#555; text-decoration:none; }
+    .user div.commands a { color: black; }
+    #summary { background: #ffc; }
+    #summary h2 { font-weight: normal; color: #666; }
+    #info { padding: 0; }
+    #info > * { padding:10px 20px; }
+    #explanation { background:#eee; }
+    #template, #template-not-exist { background:#f6f6f6; }
+    #template-not-exist ul { margin: 0 0 10px 20px; }
+    #template-not-exist .postmortem-section { margin-bottom: 3px; }
+    #unicode-hint { background:#eee; }
+    #traceback { background:#eee; }
+    #requestinfo { background:#f6f6f6; padding-left:120px; }
+    #summary table { border:none; background:transparent; }
+    #requestinfo h2, #requestinfo h3 { position:relative; margin-left:-100px; }
+    #requestinfo h3 { margin-bottom:-1em; }
+    .error { background: #ffc; }
+    .specific { color:#cc3300; font-weight:bold; }
+    h2 span.commands { font-size: 0.7rem; font-weight:normal; }
+    span.commands a:link {color:#5E5694;}
+    pre.exception_value { font-family: sans-serif; color: #575757; font-size: 1.5rem; margin: 10px 0 10px 0; }
+    .append-bottom { margin-bottom: 10px; }
+    .fname { user-select: all; }
+  </style>
+  
+  <script>
+    function hideAll(elems) {
+      for (var e = 0; e < elems.length; e++) {
+        elems[e].style.display = 'none';
+      }
+    }
+    window.onload = function() {
+      hideAll(document.querySelectorAll('ol.pre-context'));
+      hideAll(document.querySelectorAll('ol.post-context'));
+      hideAll(document.querySelectorAll('div.pastebin'));
+    }
+    function toggle() {
+      for (var i = 0; i < arguments.length; i++) {
+        var e = document.getElementById(arguments[i]);
+        if (e) {
+          e.style.display = e.style.display == 'none' ? 'block': 'none';
+        }
+      }
+      return false;
+    }
+    function switchPastebinFriendly(link) {
+      s1 = "Switch to copy-and-paste view";
+      s2 = "Switch back to interactive view";
+      link.textContent = link.textContent.trim() == s1 ? s2: s1;
+      toggle('browserTraceback', 'pastebinTraceback');
+      return false;
+    }
+  </script>
+  
+</head>
+<body>
+<header id="summary">
+  <h1>OperationalError
+       at /api/schools/compliance-verification/</h1>
+  <pre class="exception_value">no such column: user_registration_complianceverification.last_updated_on</pre>
   <table class="meta">
+
+    <tr>
+      <th scope="row">Request Method:</th>
+      <td>GET</td>
+    </tr>
+    <tr>
+      <th scope="row">Request URL:</th>
+      <td>https://schoolapp-algorithmxcomp.pythonanywhere.com/api/schools/compliance-verification/</td>
+    </tr>
+
+    <tr>
+      <th scope="row">Django Version:</th>
+      <td>5.1.4</td>
+    </tr>
+
+    <tr>
+      <th scope="row">Exception Type:</th>
+      <td>OperationalError</td>
+    </tr>
+
+
+    <tr>
+      <th scope="row">Exception Value:</th>
+      <td><pre>no such column: user_registration_complianceverification.last_updated_on</pre></td>
+    </tr>
+
+
+    <tr>
+      <th scope="row">Exception Location:</th>
+      <td><span class="fname">/home/AlgorithmXComp/.virtualenvs/myenvschool/lib/python3.10/site-packages/django/db/backends/sqlite3/base.py</span>, line 354, in execute</td>
+    </tr>
+
+
+    <tr>
+      <th scope="row">Raised during:</th>
+      <td>user_registration.views.ComplianceVerificationListView</td>
+    </tr>
+
+    <tr>
+      <th scope="row">Python Executable:</th>
+      <td>/usr/local/bin/uwsgi</td>
+    </tr>
+    <tr>
+      <th scope="row">Python Version:</th>
+      <td>3.10.5</td>
+    </tr>
+    <tr>
+      <th scope="row">Python Path:</th>
+      <td><pre><code>[&#x27;/var/www&#x27;,
+ &#x27;.&#x27;,
+ &#x27;&#x27;,
+ &#x27;/var/www&#x27;,
+ &#x27;/usr/local/lib/python310.zip&#x27;,
+ &#x27;/usr/local/lib/python3.10&#x27;,
+ &#x27;/usr/local/lib/python3.10/lib-dynload&#x27;,
+ &#x27;/home/AlgorithmXComp/.virtualenvs/myenvschool/lib/python3.10/site-packages&#x27;,
+ &#x27;/home/AlgorithmXComp/School_management&#x27;]</code></pre></td>
+    </tr>
+    <tr>
+      <th scope="row">Server time:</th>
+      <td>Tue, 30 Sep 2025 18:35:58 +0100</td>
+    </tr>
+  </table>
+</header>
+
+<main id="info">
+
+
+
+
+<div id="traceback">
+  <h2>Traceback <span class="commands"><a href="#" onclick="return switchPastebinFriendly(this);">
+    Switch to copy-and-paste view</a></span>
+  </h2>
+  <div id="browserTraceback">
+    <ul class="traceback">
+      
+        
+        <li class="frame django">
+          
+            <code class="fname">/home/AlgorithmXComp/.virtualenvs/myenvschool/lib/python3.10/site-packages/django/db/backends/utils.py</code>, line 105, in _execute
+          
+
+          
+            <div class="context" id="c138158272674560">
+              
+                <ol start="98" class="pre-context" id="pre138158272674560">
+                
+                  <li onclick="toggle('pre138158272674560', 'post138158272674560')"><pre>            warnings.warn(self.APPS_NOT_READY_WARNING_MSG, category=RuntimeWarning)</pre></li>
+                
+                  <li onclick="toggle('pre138158272674560', 'post138158272674560')"><pre>        self.db.validate_no_broken_transaction()</pre></li>
+                
+                  <li onclick="toggle('pre138158272674560', 'post138158272674560')"><pre>        with self.db.wrap_database_errors:</pre></li>
+                
+                  <li onclick="toggle('pre138158272674560', 'post138158272674560')"><pre>            if params is None:</pre></li>
+                
+                  <li onclick="toggle('pre138158272674560', 'post138158272674560')"><pre>                # params default might be backend specific.</pre></li>
+                
+                  <li onclick="toggle('pre138158272674560', 'post138158272674560')"><pre>                return self.cursor.execute(sql)</pre></li>
+                
+                  <li onclick="toggle('pre138158272674560', 'post138158272674560')"><pre>            else:</pre></li>
+                
+                </ol>
+              
+              <ol start="105" class="context-line">
+                <li onclick="toggle('pre138158272674560', 'post138158272674560')"><pre>                return self.cursor.execute(sql, params)</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='106' class="post-context" id="post138158272674560">
+                  
+                  <li onclick="toggle('pre138158272674560', 'post138158272674560')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre138158272674560', 'post138158272674560')"><pre>    def _executemany(self, sql, param_list, *ignored_wrapper_args):</pre></li>
+                  
+                  <li onclick="toggle('pre138158272674560', 'post138158272674560')"><pre>        # Raise a warning during app initialization (stored_app_configs is only</pre></li>
+                  
+                  <li onclick="toggle('pre138158272674560', 'post138158272674560')"><pre>        # ever set during testing).</pre></li>
+                  
+                  <li onclick="toggle('pre138158272674560', 'post138158272674560')"><pre>        if not apps.ready and not apps.stored_app_configs:</pre></li>
+                  
+                  <li onclick="toggle('pre138158272674560', 'post138158272674560')"><pre>            warnings.warn(self.APPS_NOT_READY_WARNING_MSG, category=RuntimeWarning)</pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v138158272674560">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>ignored_wrapper_args</td>
+                    <td class="code"><pre>(False,
+ {&#x27;connection&#x27;: &lt;DatabaseWrapper vendor=&#x27;sqlite&#x27; alias=&#x27;default&#x27;&gt;,
+  &#x27;cursor&#x27;: &lt;django.db.backends.utils.CursorDebugWrapper object at 0x7da77ac59630&gt;})</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>params</td>
+                    <td class="code"><pre>()</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;django.db.backends.utils.CursorDebugWrapper object at 0x7da77ac59630&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>sql</td>
+                    <td class="code"><pre>(&#x27;SELECT &quot;user_registration_complianceverification&quot;.&quot;id&quot;, &#x27;
+ &#x27;&quot;user_registration_complianceverification&quot;.&quot;school_id&quot;, &#x27;
+ &#x27;&quot;user_registration_complianceverification&quot;.&quot;accreditation_certificates&quot;, &#x27;
+ &#x27;&quot;user_registration_complianceverification&quot;.&quot;proof_of_registration&quot;, &#x27;
+ &#x27;&quot;user_registration_complianceverification&quot;.&quot;tax_identification_number&quot;, &#x27;
+ &#x27;&quot;user_registration_complianceverification&quot;.&quot;compliance&quot;, &#x27;
+ &#x27;&quot;user_registration_complianceverification&quot;.&quot;approved&quot;, &#x27;
+ &#x27;&quot;user_registration_complianceverification&quot;.&quot;last_updated_on&quot;, &#x27;
+ &#x27;&quot;user_registration_complianceverification&quot;.&quot;uploaded_on&quot; FROM &#x27;
+ &#x27;&quot;user_registration_complianceverification&quot;&#x27;)</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+        
+        <li class="frame django">
+          
+            <code class="fname">/home/AlgorithmXComp/.virtualenvs/myenvschool/lib/python3.10/site-packages/django/db/backends/sqlite3/base.py</code>, line 354, in execute
+          
+
+          
+            <div class="context" id="c138158272674624">
+              
+                <ol start="347" class="pre-context" id="pre138158272674624">
+                
+                  <li onclick="toggle('pre138158272674624', 'post138158272674624')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre138158272674624', 'post138158272674624')"><pre>    def execute(self, query, params=None):</pre></li>
+                
+                  <li onclick="toggle('pre138158272674624', 'post138158272674624')"><pre>        if params is None:</pre></li>
+                
+                  <li onclick="toggle('pre138158272674624', 'post138158272674624')"><pre>            return super().execute(query)</pre></li>
+                
+                  <li onclick="toggle('pre138158272674624', 'post138158272674624')"><pre>        # Extract names if params is a mapping, i.e. &quot;pyformat&quot; style is used.</pre></li>
+                
+                  <li onclick="toggle('pre138158272674624', 'post138158272674624')"><pre>        param_names = list(params) if isinstance(params, Mapping) else None</pre></li>
+                
+                  <li onclick="toggle('pre138158272674624', 'post138158272674624')"><pre>        query = self.convert_query(query, param_names=param_names)</pre></li>
+                
+                </ol>
+              
+              <ol start="354" class="context-line">
+                <li onclick="toggle('pre138158272674624', 'post138158272674624')"><pre>        return super().execute(query, params)</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='355' class="post-context" id="post138158272674624">
+                  
+                  <li onclick="toggle('pre138158272674624', 'post138158272674624')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre138158272674624', 'post138158272674624')"><pre>    def executemany(self, query, param_list):</pre></li>
+                  
+                  <li onclick="toggle('pre138158272674624', 'post138158272674624')"><pre>        # Extract names if params is a mapping, i.e. &quot;pyformat&quot; style is used.</pre></li>
+                  
+                  <li onclick="toggle('pre138158272674624', 'post138158272674624')"><pre>        # Peek carefully as a generator can be passed instead of a list/tuple.</pre></li>
+                  
+                  <li onclick="toggle('pre138158272674624', 'post138158272674624')"><pre>        peekable, param_list = tee(iter(param_list))</pre></li>
+                  
+                  <li onclick="toggle('pre138158272674624', 'post138158272674624')"><pre>        if (params := next(peekable, None)) and isinstance(params, Mapping):</pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v138158272674624">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>_class_</td>
+                    <td class="code"><pre>&lt;class &#x27;django.db.backends.sqlite3.base.SQLiteCursorWrapper&#x27;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>param_names</td>
+                    <td class="code"><pre>None</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>params</td>
+                    <td class="code"><pre>()</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>query</td>
+                    <td class="code"><pre>(&#x27;SELECT &quot;user_registration_complianceverification&quot;.&quot;id&quot;, &#x27;
+ &#x27;&quot;user_registration_complianceverification&quot;.&quot;school_id&quot;, &#x27;
+ &#x27;&quot;user_registration_complianceverification&quot;.&quot;accreditation_certificates&quot;, &#x27;
+ &#x27;&quot;user_registration_complianceverification&quot;.&quot;proof_of_registration&quot;, &#x27;
+ &#x27;&quot;user_registration_complianceverification&quot;.&quot;tax_identification_number&quot;, &#x27;
+ &#x27;&quot;user_registration_complianceverification&quot;.&quot;compliance&quot;, &#x27;
+ &#x27;&quot;user_registration_complianceverification&quot;.&quot;approved&quot;, &#x27;
+ &#x27;&quot;user_registration_complianceverification&quot;.&quot;last_updated_on&quot;, &#x27;
+ &#x27;&quot;user_registration_complianceverification&quot;.&quot;uploaded_on&quot; FROM &#x27;
+ &#x27;&quot;user_registration_complianceverification&quot;&#x27;)</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;django.db.backends.sqlite3.base.SQLiteCursorWrapper object at 0x7da77abf0d30&gt;</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+        
+          <li class="cause"><h3>
+          
+            The above exception (no such column: user_registration_complianceverification.last_updated_on) was the direct cause of the following exception:
+          
+        </h3></li>
+        
+        <li class="frame django">
+          
+            <code class="fname">/home/AlgorithmXComp/.virtualenvs/myenvschool/lib/python3.10/site-packages/django/core/handlers/exception.py</code>, line 55, in inner
+          
+
+          
+            <div class="context" id="c138158272675456">
+              
+                <ol start="48" class="pre-context" id="pre138158272675456">
+                
+                  <li onclick="toggle('pre138158272675456', 'post138158272675456')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre138158272675456', 'post138158272675456')"><pre>        return inner</pre></li>
+                
+                  <li onclick="toggle('pre138158272675456', 'post138158272675456')"><pre>    else:</pre></li>
+                
+                  <li onclick="toggle('pre138158272675456', 'post138158272675456')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre138158272675456', 'post138158272675456')"><pre>        @wraps(get_response)</pre></li>
+                
+                  <li onclick="toggle('pre138158272675456', 'post138158272675456')"><pre>        def inner(request):</pre></li>
+                
+                  <li onclick="toggle('pre138158272675456', 'post138158272675456')"><pre>            try:</pre></li>
+                
+                </ol>
+              
+              <ol start="55" class="context-line">
+                <li onclick="toggle('pre138158272675456', 'post138158272675456')"><pre>                response = get_response(request)</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='56' class="post-context" id="post138158272675456">
+                  
+                  <li onclick="toggle('pre138158272675456', 'post138158272675456')"><pre>            except Exception as exc:</pre></li>
+                  
+                  <li onclick="toggle('pre138158272675456', 'post138158272675456')"><pre>                response = response_for_exception(request, exc)</pre></li>
+                  
+                  <li onclick="toggle('pre138158272675456', 'post138158272675456')"><pre>            return response</pre></li>
+                  
+                  <li onclick="toggle('pre138158272675456', 'post138158272675456')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre138158272675456', 'post138158272675456')"><pre>        return inner</pre></li>
+                  
+                  <li onclick="toggle('pre138158272675456', 'post138158272675456')"><pre></pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v138158272675456">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>exc</td>
+                    <td class="code"><pre>OperationalError(&#x27;no such column: user_registration_complianceverification.last_updated_on&#x27;)</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>get_response</td>
+                    <td class="code"><pre>&lt;bound method BaseHandler._get_response of &lt;django.core.handlers.wsgi.WSGIHandler object at 0x7da7930bb130&gt;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>request</td>
+                    <td class="code"><pre>&lt;WSGIRequest: GET &#x27;/api/schools/compliance-verification/&#x27;&gt;</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+        
+        <li class="frame django">
+          
+            <code class="fname">/home/AlgorithmXComp/.virtualenvs/myenvschool/lib/python3.10/site-packages/django/core/handlers/base.py</code>, line 197, in _get_response
+          
+
+          
+            <div class="context" id="c138158272675328">
+              
+                <ol start="190" class="pre-context" id="pre138158272675328">
+                
+                  <li onclick="toggle('pre138158272675328', 'post138158272675328')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre138158272675328', 'post138158272675328')"><pre>        if response is None:</pre></li>
+                
+                  <li onclick="toggle('pre138158272675328', 'post138158272675328')"><pre>            wrapped_callback = self.make_view_atomic(callback)</pre></li>
+                
+                  <li onclick="toggle('pre138158272675328', 'post138158272675328')"><pre>            # If it is an asynchronous view, run it in a subthread.</pre></li>
+                
+                  <li onclick="toggle('pre138158272675328', 'post138158272675328')"><pre>            if iscoroutinefunction(wrapped_callback):</pre></li>
+                
+                  <li onclick="toggle('pre138158272675328', 'post138158272675328')"><pre>                wrapped_callback = async_to_sync(wrapped_callback)</pre></li>
+                
+                  <li onclick="toggle('pre138158272675328', 'post138158272675328')"><pre>            try:</pre></li>
+                
+                </ol>
+              
+              <ol start="197" class="context-line">
+                <li onclick="toggle('pre138158272675328', 'post138158272675328')"><pre>                response = wrapped_callback(request, *callback_args, **callback_kwargs)</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='198' class="post-context" id="post138158272675328">
+                  
+                  <li onclick="toggle('pre138158272675328', 'post138158272675328')"><pre>            except Exception as e:</pre></li>
+                  
+                  <li onclick="toggle('pre138158272675328', 'post138158272675328')"><pre>                response = self.process_exception_by_middleware(e, request)</pre></li>
+                  
+                  <li onclick="toggle('pre138158272675328', 'post138158272675328')"><pre>                if response is None:</pre></li>
+                  
+                  <li onclick="toggle('pre138158272675328', 'post138158272675328')"><pre>                    raise</pre></li>
+                  
+                  <li onclick="toggle('pre138158272675328', 'post138158272675328')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre138158272675328', 'post138158272675328')"><pre>        # Complain if the view returned None (a common error).</pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v138158272675328">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>callback</td>
+                    <td class="code"><pre>&lt;function View.as_view.&lt;locals&gt;.view at 0x7da77b9377f0&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>callback_args</td>
+                    <td class="code"><pre>()</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>callback_kwargs</td>
+                    <td class="code"><pre>{}</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>middleware_method</td>
+                    <td class="code"><pre>&lt;bound method CsrfViewMiddleware.process_view of &lt;CsrfViewMiddleware get_response=convert_exception_to_response.&lt;locals&gt;.inner&gt;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>request</td>
+                    <td class="code"><pre>&lt;WSGIRequest: GET &#x27;/api/schools/compliance-verification/&#x27;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>response</td>
+                    <td class="code"><pre>None</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;django.core.handlers.wsgi.WSGIHandler object at 0x7da7930bb130&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>wrapped_callback</td>
+                    <td class="code"><pre>&lt;function View.as_view.&lt;locals&gt;.view at 0x7da77b9377f0&gt;</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+        
+        <li class="frame django">
+          
+            <code class="fname">/home/AlgorithmXComp/.virtualenvs/myenvschool/lib/python3.10/site-packages/django/views/decorators/csrf.py</code>, line 65, in _view_wrapper
+          
+
+          
+            <div class="context" id="c138158272663936">
+              
+                <ol start="58" class="pre-context" id="pre138158272663936">
+                
+                  <li onclick="toggle('pre138158272663936', 'post138158272663936')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre138158272663936', 'post138158272663936')"><pre>        async def _view_wrapper(request, *args, **kwargs):</pre></li>
+                
+                  <li onclick="toggle('pre138158272663936', 'post138158272663936')"><pre>            return await view_func(request, *args, **kwargs)</pre></li>
+                
+                  <li onclick="toggle('pre138158272663936', 'post138158272663936')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre138158272663936', 'post138158272663936')"><pre>    else:</pre></li>
+                
+                  <li onclick="toggle('pre138158272663936', 'post138158272663936')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre138158272663936', 'post138158272663936')"><pre>        def _view_wrapper(request, *args, **kwargs):</pre></li>
+                
+                </ol>
+              
+              <ol start="65" class="context-line">
+                <li onclick="toggle('pre138158272663936', 'post138158272663936')"><pre>            return view_func(request, *args, **kwargs)</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='66' class="post-context" id="post138158272663936">
+                  
+                  <li onclick="toggle('pre138158272663936', 'post138158272663936')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre138158272663936', 'post138158272663936')"><pre>    _view_wrapper.csrf_exempt = True</pre></li>
+                  
+                  <li onclick="toggle('pre138158272663936', 'post138158272663936')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre138158272663936', 'post138158272663936')"><pre>    return wraps(view_func)(_view_wrapper)</pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v138158272663936">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>args</td>
+                    <td class="code"><pre>()</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>kwargs</td>
+                    <td class="code"><pre>{}</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>request</td>
+                    <td class="code"><pre>&lt;WSGIRequest: GET &#x27;/api/schools/compliance-verification/&#x27;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>view_func</td>
+                    <td class="code"><pre>&lt;function View.as_view.&lt;locals&gt;.view at 0x7da77b937760&gt;</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+        
+        <li class="frame django">
+          
+            <code class="fname">/home/AlgorithmXComp/.virtualenvs/myenvschool/lib/python3.10/site-packages/django/views/generic/base.py</code>, line 104, in view
+          
+
+          
+            <div class="context" id="c138158272337472">
+              
+                <ol start="97" class="pre-context" id="pre138158272337472">
+                
+                  <li onclick="toggle('pre138158272337472', 'post138158272337472')"><pre>            self = cls(**initkwargs)</pre></li>
+                
+                  <li onclick="toggle('pre138158272337472', 'post138158272337472')"><pre>            self.setup(request, *args, **kwargs)</pre></li>
+                
+                  <li onclick="toggle('pre138158272337472', 'post138158272337472')"><pre>            if not hasattr(self, &quot;request&quot;):</pre></li>
+                
+                  <li onclick="toggle('pre138158272337472', 'post138158272337472')"><pre>                raise AttributeError(</pre></li>
+                
+                  <li onclick="toggle('pre138158272337472', 'post138158272337472')"><pre>                    &quot;%s instance has no &#x27;request&#x27; attribute. Did you override &quot;</pre></li>
+                
+                  <li onclick="toggle('pre138158272337472', 'post138158272337472')"><pre>                    &quot;setup() and forget to call super()?&quot; % cls._name_</pre></li>
+                
+                  <li onclick="toggle('pre138158272337472', 'post138158272337472')"><pre>                )</pre></li>
+                
+                </ol>
+              
+              <ol start="104" class="context-line">
+                <li onclick="toggle('pre138158272337472', 'post138158272337472')"><pre>            return self.dispatch(request, *args, **kwargs)</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='105' class="post-context" id="post138158272337472">
+                  
+                  <li onclick="toggle('pre138158272337472', 'post138158272337472')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre138158272337472', 'post138158272337472')"><pre>        view.view_class = cls</pre></li>
+                  
+                  <li onclick="toggle('pre138158272337472', 'post138158272337472')"><pre>        view.view_initkwargs = initkwargs</pre></li>
+                  
+                  <li onclick="toggle('pre138158272337472', 'post138158272337472')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre138158272337472', 'post138158272337472')"><pre>        # _name_ and _qualname_ are intentionally left unchanged as</pre></li>
+                  
+                  <li onclick="toggle('pre138158272337472', 'post138158272337472')"><pre>        # view_class should be used to robustly determine the name of the view</pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v138158272337472">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>args</td>
+                    <td class="code"><pre>()</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>cls</td>
+                    <td class="code"><pre>&lt;class &#x27;user_registration.views.ComplianceVerificationListView&#x27;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>initkwargs</td>
+                    <td class="code"><pre>{}</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>kwargs</td>
+                    <td class="code"><pre>{}</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>request</td>
+                    <td class="code"><pre>&lt;WSGIRequest: GET &#x27;/api/schools/compliance-verification/&#x27;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;user_registration.views.ComplianceVerificationListView object at 0x7da77ab78130&gt;</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+        
+        <li class="frame user">
+          
+            <code class="fname">/home/AlgorithmXComp/.virtualenvs/myenvschool/lib/python3.10/site-packages/rest_framework/views.py</code>, line 509, in dispatch
+          
+
+          
+            <div class="context" id="c138158272673472">
+              
+                <ol start="502" class="pre-context" id="pre138158272673472">
+                
+                  <li onclick="toggle('pre138158272673472', 'post138158272673472')"><pre>                                  self.http_method_not_allowed)</pre></li>
+                
+                  <li onclick="toggle('pre138158272673472', 'post138158272673472')"><pre>            else:</pre></li>
+                
+                  <li onclick="toggle('pre138158272673472', 'post138158272673472')"><pre>                handler = self.http_method_not_allowed</pre></li>
+                
+                  <li onclick="toggle('pre138158272673472', 'post138158272673472')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre138158272673472', 'post138158272673472')"><pre>            response = handler(request, *args, **kwargs)</pre></li>
+                
+                  <li onclick="toggle('pre138158272673472', 'post138158272673472')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre138158272673472', 'post138158272673472')"><pre>        except Exception as exc:</pre></li>
+                
+                </ol>
+              
+              <ol start="509" class="context-line">
+                <li onclick="toggle('pre138158272673472', 'post138158272673472')"><pre>            response = self.handle_exception(exc)</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='510' class="post-context" id="post138158272673472">
+                  
+                  <li onclick="toggle('pre138158272673472', 'post138158272673472')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre138158272673472', 'post138158272673472')"><pre>        self.response = self.finalize_response(request, response, *args, **kwargs)</pre></li>
+                  
+                  <li onclick="toggle('pre138158272673472', 'post138158272673472')"><pre>        return self.response</pre></li>
+                  
+                  <li onclick="toggle('pre138158272673472', 'post138158272673472')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre138158272673472', 'post138158272673472')"><pre>    def options(self, request, *args, **kwargs):</pre></li>
+                  
+                  <li onclick="toggle('pre138158272673472', 'post138158272673472')"><pre>        &quot;&quot;&quot;</pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v138158272673472">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>args</td>
+                    <td class="code"><pre>()</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>handler</td>
+                    <td class="code"><pre>&lt;bound method ListAPIView.get of &lt;user_registration.views.ComplianceVerificationListView object at 0x7da77ab78130&gt;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>kwargs</td>
+                    <td class="code"><pre>{}</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>request</td>
+                    <td class="code"><pre>&lt;rest_framework.request.Request: GET &#x27;/api/schools/compliance-verification/&#x27;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;user_registration.views.ComplianceVerificationListView object at 0x7da77ab78130&gt;</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+        
+        <li class="frame user">
+          
+            <code class="fname">/home/AlgorithmXComp/.virtualenvs/myenvschool/lib/python3.10/site-packages/rest_framework/views.py</code>, line 469, in handle_exception
+          
+
+          
+            <div class="context" id="c138158272666752">
+              
+                <ol start="462" class="pre-context" id="pre138158272666752">
+                
+                  <li onclick="toggle('pre138158272666752', 'post138158272666752')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre138158272666752', 'post138158272666752')"><pre>        exception_handler = self.get_exception_handler()</pre></li>
+                
+                  <li onclick="toggle('pre138158272666752', 'post138158272666752')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre138158272666752', 'post138158272666752')"><pre>        context = self.get_exception_handler_context()</pre></li>
+                
+                  <li onclick="toggle('pre138158272666752', 'post138158272666752')"><pre>        response = exception_handler(exc, context)</pre></li>
+                
+                  <li onclick="toggle('pre138158272666752', 'post138158272666752')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre138158272666752', 'post138158272666752')"><pre>        if response is None:</pre></li>
+                
+                </ol>
+              
+              <ol start="469" class="context-line">
+                <li onclick="toggle('pre138158272666752', 'post138158272666752')"><pre>            self.raise_uncaught_exception(exc)</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='470' class="post-context" id="post138158272666752">
+                  
+                  <li onclick="toggle('pre138158272666752', 'post138158272666752')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre138158272666752', 'post138158272666752')"><pre>        response.exception = True</pre></li>
+                  
+                  <li onclick="toggle('pre138158272666752', 'post138158272666752')"><pre>        return response</pre></li>
+                  
+                  <li onclick="toggle('pre138158272666752', 'post138158272666752')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre138158272666752', 'post138158272666752')"><pre>    def raise_uncaught_exception(self, exc):</pre></li>
+                  
+                  <li onclick="toggle('pre138158272666752', 'post138158272666752')"><pre>        if settings.DEBUG:</pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v138158272666752">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>context</td>
+                    <td class="code"><pre>{&#x27;args&#x27;: (),
+ &#x27;kwargs&#x27;: {},
+ &#x27;request&#x27;: &lt;rest_framework.request.Request: GET &#x27;/api/schools/compliance-verification/&#x27;&gt;,
+ &#x27;view&#x27;: &lt;user_registration.views.ComplianceVerificationListView object at 0x7da77ab78130&gt;}</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>exc</td>
+                    <td class="code"><pre>OperationalError(&#x27;no such column: user_registration_complianceverification.last_updated_on&#x27;)</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>exception_handler</td>
+                    <td class="code"><pre>&lt;function exception_handler at 0x7da79224ea70&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>response</td>
+                    <td class="code"><pre>None</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;user_registration.views.ComplianceVerificationListView object at 0x7da77ab78130&gt;</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+        
+        <li class="frame user">
+          
+            <code class="fname">/home/AlgorithmXComp/.virtualenvs/myenvschool/lib/python3.10/site-packages/rest_framework/views.py</code>, line 480, in raise_uncaught_exception
+          
+
+          
+            <div class="context" id="c138158272660480">
+              
+                <ol start="473" class="pre-context" id="pre138158272660480">
+                
+                  <li onclick="toggle('pre138158272660480', 'post138158272660480')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre138158272660480', 'post138158272660480')"><pre>    def raise_uncaught_exception(self, exc):</pre></li>
+                
+                  <li onclick="toggle('pre138158272660480', 'post138158272660480')"><pre>        if settings.DEBUG:</pre></li>
+                
+                  <li onclick="toggle('pre138158272660480', 'post138158272660480')"><pre>            request = self.request</pre></li>
+                
+                  <li onclick="toggle('pre138158272660480', 'post138158272660480')"><pre>            renderer_format = getattr(request.accepted_renderer, &#x27;format&#x27;)</pre></li>
+                
+                  <li onclick="toggle('pre138158272660480', 'post138158272660480')"><pre>            use_plaintext_traceback = renderer_format not in (&#x27;html&#x27;, &#x27;api&#x27;, &#x27;admin&#x27;)</pre></li>
+                
+                  <li onclick="toggle('pre138158272660480', 'post138158272660480')"><pre>            request.force_plaintext_errors(use_plaintext_traceback)</pre></li>
+                
+                </ol>
+              
+              <ol start="480" class="context-line">
+                <li onclick="toggle('pre138158272660480', 'post138158272660480')"><pre>        raise exc</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='481' class="post-context" id="post138158272660480">
+                  
+                  <li onclick="toggle('pre138158272660480', 'post138158272660480')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre138158272660480', 'post138158272660480')"><pre>    # Note: Views are made CSRF exempt from within as_view as to prevent</pre></li>
+                  
+                  <li onclick="toggle('pre138158272660480', 'post138158272660480')"><pre>    # accidental removal of this exemption in cases where dispatch needs to</pre></li>
+                  
+                  <li onclick="toggle('pre138158272660480', 'post138158272660480')"><pre>    # be overridden.</pre></li>
+                  
+                  <li onclick="toggle('pre138158272660480', 'post138158272660480')"><pre>    def dispatch(self, request, *args, **kwargs):</pre></li>
+                  
+                  <li onclick="toggle('pre138158272660480', 'post138158272660480')"><pre>        &quot;&quot;&quot;</pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v138158272660480">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>exc</td>
+                    <td class="code"><pre>OperationalError(&#x27;no such column: user_registration_complianceverification.last_updated_on&#x27;)</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>renderer_format</td>
+                    <td class="code"><pre>&#x27;json&#x27;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>request</td>
+                    <td class="code"><pre>&lt;rest_framework.request.Request: GET &#x27;/api/schools/compliance-verification/&#x27;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;user_registration.views.ComplianceVerificationListView object at 0x7da77ab78130&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>use_plaintext_traceback</td>
+                    <td class="code"><pre>True</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+        
+        <li class="frame user">
+          
+            <code class="fname">/home/AlgorithmXComp/.virtualenvs/myenvschool/lib/python3.10/site-packages/rest_framework/views.py</code>, line 506, in dispatch
+          
+
+          
+            <div class="context" id="c138158272663616">
+              
+                <ol start="499" class="pre-context" id="pre138158272663616">
+                
+                  <li onclick="toggle('pre138158272663616', 'post138158272663616')"><pre>            # Get the appropriate handler method</pre></li>
+                
+                  <li onclick="toggle('pre138158272663616', 'post138158272663616')"><pre>            if request.method.lower() in self.http_method_names:</pre></li>
+                
+                  <li onclick="toggle('pre138158272663616', 'post138158272663616')"><pre>                handler = getattr(self, request.method.lower(),</pre></li>
+                
+                  <li onclick="toggle('pre138158272663616', 'post138158272663616')"><pre>                                  self.http_method_not_allowed)</pre></li>
+                
+                  <li onclick="toggle('pre138158272663616', 'post138158272663616')"><pre>            else:</pre></li>
+                
+                  <li onclick="toggle('pre138158272663616', 'post138158272663616')"><pre>                handler = self.http_method_not_allowed</pre></li>
+                
+                  <li onclick="toggle('pre138158272663616', 'post138158272663616')"><pre></pre></li>
+                
+                </ol>
+              
+              <ol start="506" class="context-line">
+                <li onclick="toggle('pre138158272663616', 'post138158272663616')"><pre>            response = handler(request, *args, **kwargs)</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='507' class="post-context" id="post138158272663616">
+                  
+                  <li onclick="toggle('pre138158272663616', 'post138158272663616')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre138158272663616', 'post138158272663616')"><pre>        except Exception as exc:</pre></li>
+                  
+                  <li onclick="toggle('pre138158272663616', 'post138158272663616')"><pre>            response = self.handle_exception(exc)</pre></li>
+                  
+                  <li onclick="toggle('pre138158272663616', 'post138158272663616')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre138158272663616', 'post138158272663616')"><pre>        self.response = self.finalize_response(request, response, *args, **kwargs)</pre></li>
+                  
+                  <li onclick="toggle('pre138158272663616', 'post138158272663616')"><pre>        return self.response</pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v138158272663616">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>args</td>
+                    <td class="code"><pre>()</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>handler</td>
+                    <td class="code"><pre>&lt;bound method ListAPIView.get of &lt;user_registration.views.ComplianceVerificationListView object at 0x7da77ab78130&gt;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>kwargs</td>
+                    <td class="code"><pre>{}</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>request</td>
+                    <td class="code"><pre>&lt;rest_framework.request.Request: GET &#x27;/api/schools/compliance-verification/&#x27;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;user_registration.views.ComplianceVerificationListView object at 0x7da77ab78130&gt;</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+        
+        <li class="frame user">
+          
+            <code class="fname">/home/AlgorithmXComp/.virtualenvs/myenvschool/lib/python3.10/site-packages/rest_framework/generics.py</code>, line 203, in get
+          
+
+          
+            <div class="context" id="c138158272036032">
+              
+                <ol start="196" class="pre-context" id="pre138158272036032">
+                
+                  <li onclick="toggle('pre138158272036032', 'post138158272036032')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre138158272036032', 'post138158272036032')"><pre>class ListAPIView(mixins.ListModelMixin,</pre></li>
+                
+                  <li onclick="toggle('pre138158272036032', 'post138158272036032')"><pre>                  GenericAPIView):</pre></li>
+                
+                  <li onclick="toggle('pre138158272036032', 'post138158272036032')"><pre>    &quot;&quot;&quot;</pre></li>
+                
+                  <li onclick="toggle('pre138158272036032', 'post138158272036032')"><pre>    Concrete view for listing a queryset.</pre></li>
+                
+                  <li onclick="toggle('pre138158272036032', 'post138158272036032')"><pre>    &quot;&quot;&quot;</pre></li>
+                
+                  <li onclick="toggle('pre138158272036032', 'post138158272036032')"><pre>    def get(self, request, *args, **kwargs):</pre></li>
+                
+                </ol>
+              
+              <ol start="203" class="context-line">
+                <li onclick="toggle('pre138158272036032', 'post138158272036032')"><pre>        return self.list(request, *args, **kwargs)</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='204' class="post-context" id="post138158272036032">
+                  
+                  <li onclick="toggle('pre138158272036032', 'post138158272036032')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre138158272036032', 'post138158272036032')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre138158272036032', 'post138158272036032')"><pre>class RetrieveAPIView(mixins.RetrieveModelMixin,</pre></li>
+                  
+                  <li onclick="toggle('pre138158272036032', 'post138158272036032')"><pre>                      GenericAPIView):</pre></li>
+                  
+                  <li onclick="toggle('pre138158272036032', 'post138158272036032')"><pre>    &quot;&quot;&quot;</pre></li>
+                  
+                  <li onclick="toggle('pre138158272036032', 'post138158272036032')"><pre>    Concrete view for retrieving a model instance.</pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v138158272036032">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>args</td>
+                    <td class="code"><pre>()</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>kwargs</td>
+                    <td class="code"><pre>{}</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>request</td>
+                    <td class="code"><pre>&lt;rest_framework.request.Request: GET &#x27;/api/schools/compliance-verification/&#x27;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;user_registration.views.ComplianceVerificationListView object at 0x7da77ab78130&gt;</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+        
+        <li class="frame user">
+          
+            <code class="fname">/home/AlgorithmXComp/.virtualenvs/myenvschool/lib/python3.10/site-packages/rest_framework/mixins.py</code>, line 46, in list
+          
+
+          
+            <div class="context" id="c138158272674304">
+              
+                <ol start="39" class="pre-context" id="pre138158272674304">
+                
+                  <li onclick="toggle('pre138158272674304', 'post138158272674304')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre138158272674304', 'post138158272674304')"><pre>        page = self.paginate_queryset(queryset)</pre></li>
+                
+                  <li onclick="toggle('pre138158272674304', 'post138158272674304')"><pre>        if page is not None:</pre></li>
+                
+                  <li onclick="toggle('pre138158272674304', 'post138158272674304')"><pre>            serializer = self.get_serializer(page, many=True)</pre></li>
+                
+                  <li onclick="toggle('pre138158272674304', 'post138158272674304')"><pre>            return self.get_paginated_response(serializer.data)</pre></li>
+                
+                  <li onclick="toggle('pre138158272674304', 'post138158272674304')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre138158272674304', 'post138158272674304')"><pre>        serializer = self.get_serializer(queryset, many=True)</pre></li>
+                
+                </ol>
+              
+              <ol start="46" class="context-line">
+                <li onclick="toggle('pre138158272674304', 'post138158272674304')"><pre>        return Response(serializer.data)</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='47' class="post-context" id="post138158272674304">
+                  
+                  <li onclick="toggle('pre138158272674304', 'post138158272674304')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre138158272674304', 'post138158272674304')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre138158272674304', 'post138158272674304')"><pre>class RetrieveModelMixin:</pre></li>
+                  
+                  <li onclick="toggle('pre138158272674304', 'post138158272674304')"><pre>    &quot;&quot;&quot;</pre></li>
+                  
+                  <li onclick="toggle('pre138158272674304', 'post138158272674304')"><pre>    Retrieve a model instance.</pre></li>
+                  
+                  <li onclick="toggle('pre138158272674304', 'post138158272674304')"><pre>    &quot;&quot;&quot;</pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v138158272674304">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>args</td>
+                    <td class="code"><pre>()</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>kwargs</td>
+                    <td class="code"><pre>{}</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>page</td>
+                    <td class="code"><pre>None</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>queryset</td>
+                    <td class="code"><pre>Error in formatting: OperationalError: no such column: user_registration_complianceverification.last_updated_on</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>request</td>
+                    <td class="code"><pre>&lt;rest_framework.request.Request: GET &#x27;/api/schools/compliance-verification/&#x27;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;user_registration.views.ComplianceVerificationListView object at 0x7da77ab78130&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>serializer</td>
+                    <td class="code"><pre>Error in formatting: OperationalError: no such column: user_registration_complianceverification.last_updated_on</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+            </details>
+          
+        </li>
+      
+        
+        <li class="frame user">
+          
+            <code class="fname">/home/AlgorithmXComp/.virtualenvs/myenvschool/lib/python3.10/site-packages/rest_framework/serializers.py</code>, line 795, in data
+          
+
+          
+            <div class="context" id="c138158272009216">
+              
+                <ol start="788" class="pre-context" id="pre138158272009216">
+                
+                  <li onclick="toggle('pre138158272009216', 'post138158272009216')"><pre>        return representation.list_repr(self, indent=1)</pre></li>
+                
+                  <li onclick="toggle('pre138158272009216', 'post138158272009216')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre138158272009216', 'post138158272009216')"><pre>    # Include a backlink to the serializer class on return objects.</pre></li>
+                
+                  <li onclick="toggle('pre138158272009216', 'post138158272009216')"><pre>    # Allows renderers such as HTMLFormRenderer to get the full field info.</pre></li>
+                
+                  <li onclick="toggle('pre138158272009216', 'post138158272009216')"><pre></pre></li>
+                
+                  <li onclick="toggle('pre138158272009216', 'post138158272009216')"><pre>    @property</pre></li>
+                
+                  <li onclick="toggle('pre138158272009216', 'post138158272009216')"><pre>    def data(self):</pre></li>
+                
+                </ol>
+              
+              <ol start="795" class="context-line">
+                <li onclick="toggle('pre138158272009216', 'post138158272009216')"><pre>        ret = super().data</pre> <span>…</span></li>
+              </ol>
+              
+                <ol start='796' class="post-context" id="post138158272009216">
+                  
+                  <li onclick="toggle('pre138158272009216', 'post138158272009216')"><pre>        return ReturnList(ret, serializer=self)</pre></li>
+                  
+                  <li onclick="toggle('pre138158272009216', 'post138158272009216')"><pre></pre></li>
+                  
+                  <li onclick="toggle('pre138158272009216', 'post138158272009216')"><pre>    @property</pre></li>
+                  
+                  <li onclick="toggle('pre138158272009216', 'post138158272009216')"><pre>    def errors(self):</pre></li>
+                  
+                  <li onclick="toggle('pre138158272009216', 'post138158272009216')"><pre>        ret = super().errors</pre></li>
+                  
+                  <li onclick="toggle('pre138158272009216', 'post138158272009216')"><pre>        if isinstance(ret, list) and len(ret) == 1 and getattr(ret[0], &#x27;code&#x27;, None) == &#x27;null&#x27;:</pre></li>
+                  
+              </ol>
+              
+            </div>
+          
+
+          
+            
+              <details>
+                <summary class="commands">Local vars</summary>
+            
+            <table class="vars" id="v138158272009216">
+              <thead>
+                <tr>
+                  <th scope="col">Variable</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>_class_</td>
+                    <td class="code"><pre>&lt;class &#x27;rest_framework.serializers.ListSerializer&#x27;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>

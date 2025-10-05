@@ -1,19 +1,23 @@
-meta {
-  name: ComplianceVerification
-  type: http
-  seq: 19
-}
 
 get {
-  url: http://127.0.0.1:8000/api/schools/compliance-verification/
+url: http://127.0.0.1:8000/api/schools/compliance-verification/
   body: none
-  auth: bearer
+  body: multipartForm
+auth: bearer
 }
 
 auth:bearer {
   token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU4MzI0MTM1LCJpYXQiOjE3NTgyMzc3MzUsImp0aSI6IjJlZGMyMjI5ZGU3ZDQ3OWNhMDc1YzljMjVmNDQ5ZTVhIiwidXNlcl9pZCI6MjA5fQ.RL1sD6X0iLizFMBwrgJ2t1SmIIK5b4AVOOXJQOhM-VU
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU5NjE1Nzc2LCJpYXQiOjE3NTk1MjkzNzYsImp0aSI6IjBkYjg2NWRlYWUwNDQ3YmI5YTE4YjVhMTQxMzUyYjA2IiwidXNlcl9pZCI6MzE2fQ.b48vsge0jrOWgW85bzhhkaP5DwExt4vfAbTN_ILzrLU
+}
+
+body:multipart-form {
+  school: 213eb88e-e64d-40c8-bd68-cbb3ae7716d2
+  accreditation_certificates: @file(C:\Users\user\Pictures\alexander-shatov-_qsuER9xYOY-unsplash.jpg)
+  tax_identification_number: TIN-123456789
+  proof_of_registration: @file(C:\Users\user\Pictures\alexander-shatov-_qsuER9xYOY-unsplash.jpg)
 }
 
 settings {
-  encodeUrl: true
+encodeUrl: true
 }

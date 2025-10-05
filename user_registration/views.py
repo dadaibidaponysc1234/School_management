@@ -438,22 +438,41 @@ class SchoolAdminUpdateDeleteView(RetrieveUpdateDestroyAPIView):
 
 # ============================================student registration============================================================
 # Views
+# class StudentCreateView(generics.CreateAPIView):
+#     queryset = Student.objects.all()
+#     serializer_class = StudentCreateSerializer
+#     permission_classes = [IsschoolAdmin]
+
+#     @swagger_auto_schema(
+#         request_body=StudentCreateSerializer,
+#         responses={
+#             201: openapi.Response('Student created successfully', StudentCreateSerializer),
+#             400: 'Bad Request',
+#         },
+#     )
+#     def perform_create(self, serializer):
+#         school = self.request.user.school_admin.school  # Automatically set the school
+#         serializer.save(school=school)
+
+#     def post(self, request, *args, **kwargs):
+#         return super().post(request, *args, **kwargs)
+
 class StudentCreateView(generics.CreateAPIView):
     queryset = Student.objects.all()
     serializer_class = StudentCreateSerializer
-    permission_classes = [IsschoolAdmin]
+    permission_classes = [IsschoolAdmin]   # ← check the class name; was `IsschoolAdmin`
+
+    def perform_create(self, serializer):
+        school = self.request.user.school_admin.school
+        serializer.save(school=school)
 
     @swagger_auto_schema(
         request_body=StudentCreateSerializer,
         responses={
-            201: openapi.Response('Student created successfully', StudentCreateSerializer),
+            201: openapi.Response('Student created', StudentCreateSerializer),
             400: 'Bad Request',
         },
     )
-    def perform_create(self, serializer):
-        school = self.request.user.school_admin.school  # Automatically set the school
-        serializer.save(school=school)
-
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 

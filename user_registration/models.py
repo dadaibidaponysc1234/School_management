@@ -8,6 +8,7 @@ from django.conf import settings
 from django.utils.timezone import now
 from rest_framework.exceptions import ValidationError
 from django.utils import timezone
+from django.db.models import Q
 
 class Role(models.Model):
     """
@@ -434,16 +435,42 @@ class TeacherAssignment(models.Model):
         return f"{teacher_name} {class_arm} - {subject_name} {dept_name}"
 
 
-class StudentClass(models.Model):  # gght
+class StudentClass(models.Model):
     student_class_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name="student_classes")
-    klass = models.ForeignKey('Class', on_delete=models.CASCADE, related_name="student_classes")  # renamed from 'class'
+    class_arm = models.ForeignKey('Class', on_delete=models.CASCADE, related_name="student_classes", null=True)
+    class_year = models.ForeignKey('ClassYear', on_delete=models.CASCADE, related_name="student_classes", null=True)
+    is_active = models.BooleanField(default=True)
 
     class Meta:
-        unique_together = ('student', 'klass')  # Prevent duplicate assignments
+        constraints = [
+            # At most ONE active assignment per student
+            models.UniqueConstraint(
+                fields=['student'],
+                condition=Q(is_active=True),
+                name='uniq_active_student_assignment',
+            ),
+            # Also prevent duplicate rows for same (year, arm)
+            models.UniqueConstraint(
+                fields=['student', 'class_year', 'class_arm'],
+                name='uniq_student_year_arm',
+            ),
+        ]
 
     def __str__(self):
-        return f"{self.klass} - {self.student.last_name}"
+        return f"{self.student.last_name} - {self.class_arm.arm_name} {self.class_year.class_name}"
+
+
+# class StudentClass(models.Model):  # gght
+#     student_class_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+#     student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name="student_classes")
+#     klass = models.ForeignKey('Class', on_delete=models.CASCADE, related_name="student_classes", null=True)  # renamed from 'class'
+
+#     class Meta:
+#         unique_together = ('student', 'klass')  # Prevent duplicate assignments
+
+#     def __str__(self):
+#         return f"{self.klass} - {self.student.last_name}"
 
 
 class SubjectRegistrationControl(models.Model):

@@ -359,14 +359,17 @@ class RegistrationPinSerializer(serializers.ModelSerializer):
         read_only_fields = ['pin_id', 'school', 'school_name', 'is_used', 'created_at']
 
 
+
 # class StudentCreateSerializer(serializers.ModelSerializer):
 #     """
 #     Serializer for creating students.
-#     Automatically assigns the 'Student' role.
+#     Automatically assigns the 'Student' role and assigns them to a class.
 #     """
 #     user = UserSerializer()
 #     role = serializers.CharField(source='user_role.role.name', read_only=True)
-#     school = serializers.PrimaryKeyRelatedField(read_only=True)  # Auto-assigned school
+#     school = serializers.PrimaryKeyRelatedField(read_only=True)
+#     class_year = serializers.UUIDField(write_only=True)
+#     class_arm = serializers.UUIDField(write_only=True)
 
 #     class Meta:
 #         model = Student
@@ -375,85 +378,98 @@ class RegistrationPinSerializer(serializers.ModelSerializer):
 #             'middle_name', 'last_name', 'date_of_birth', 'gender', 'address', 'city', 'state',
 #             'region', 'country', 'admission_date', 'status', 'profile_picture_path',
 #             'parent_first_name', 'parent_middle_name', 'parent_last_name', 'parent_occupation',
-#             'parent_contact_info', 'parent_emergency_contact', 'parent_relationship'
+#             'parent_contact_info', 'parent_emergency_contact', 'parent_relationship',
+#             'class_year', 'class_arm'
 #         ]
 #         read_only_fields = ['student_id', 'role', 'school']
 
 #     def create(self, validated_data):
 #         user_data = validated_data.pop('user')
+#         class_year = validated_data.pop('class_year')
+#         class_arm = validated_data.pop('class_arm')
 
 #         try:
 #             with transaction.atomic():
-#                 # Create the user
 #                 user = UserSerializer().create(user_data)
-
-#                 # Retrieve the 'Student' role automatically
 #                 student_role = Role.objects.get(name='Student')
-
-#                 # Assign the Student role automatically
 #                 user_role = UserRole.objects.create(user=user, role=student_role)
-
-#                 # Create the student record
 #                 student = Student.objects.create(user=user, **validated_data)
+
+#                 # Assign class to student
+#                 # Get the class (klass) using year + arm
+#                 klass = get_object_or_404(
+#                     Class,
+#                     class_year=class_year,
+#                     arm_name=class_arm
+#                 )
+
+#                 # Create StudentClass
+#                 StudentClass.objects.create(
+#                     student=student,
+#                     klass=klass
+#                 )
 
 #                 return student
 
 #         except Exception as e:
 #             raise serializers.ValidationError({"error": f"Student creation failed: {str(e)}"})
 
+
+
 class StudentCreateSerializer(serializers.ModelSerializer):
-    """
-    Serializer for creating students.
-    Automatically assigns the 'Student' role and assigns them to a class.
-    """
-    user = UserSerializer()
-    role = serializers.CharField(source='user_role.role.name', read_only=True)
-    school = serializers.PrimaryKeyRelatedField(read_only=True)
-    class_year = serializers.UUIDField(write_only=True)
-    class_arm = serializers.UUIDField(write_only=True)
+    # Student helpers
+    student_first_name = serializers.CharField(source='student.first_name', read_only=True)
+    student_last_name  = serializers.CharField(source='student.last_name', read_only=True)
+    student_name       = serializers.SerializerMethodField(read_only=True)
+
+    # IDs
+    class_year_id = serializers.UUIDField(source='class_year.class_year_id', read_only=True)
+    class_arm_id  = serializers.UUIDField(source='class_arm.class_id', read_only=True)
+
+    # Names
+    class_year_name = serializers.CharField(source='class_year.class_name', read_only=True)
+    class_arm_name  = serializers.CharField(source='class_arm.arm_name', read_only=True)
+
+    # Write inputs (UUIDs)
+    class_year = serializers.UUIDField(write_only=True, required=True)
+    class_arm  = serializers.UUIDField(write_only=True, required=True)
 
     class Meta:
-        model = Student
+        model = StudentClass
         fields = [
-            'student_id', 'user', 'role', 'school', 'admission_number', 'first_name',
-            'middle_name', 'last_name', 'date_of_birth', 'gender', 'address', 'city', 'state',
-            'region', 'country', 'admission_date', 'status', 'profile_picture_path',
-            'parent_first_name', 'parent_middle_name', 'parent_last_name', 'parent_occupation',
-            'parent_contact_info', 'parent_emergency_contact', 'parent_relationship',
-            'class_year', 'class_arm'
+            'student_class_id', 'student',
+            'student_first_name', 'student_last_name', 'student_name',
+
+            # inputs
+            'class_year', 'class_arm',
+
+            # outputs
+            'class_year_id', 'class_arm_id',
+            'class_year_name', 'class_arm_name',
         ]
-        read_only_fields = ['student_id', 'role', 'school']
+
+    def get_student_name(self, obj):
+        return f"{obj.student.last_name} {obj.student.first_name}"
 
     def create(self, validated_data):
-        user_data = validated_data.pop('user')
-        class_year = validated_data.pop('class_year')
-        class_arm = validated_data.pop('class_arm')
+        request = self.context.get('request')
+        school = request.user.school_admin.school
 
-        try:
-            with transaction.atomic():
-                user = UserSerializer().create(user_data)
-                student_role = Role.objects.get(name='Student')
-                user_role = UserRole.objects.create(user=user, role=student_role)
-                student = Student.objects.create(user=user, **validated_data)
+        class_year_id = validated_data.pop('class_year')
+        class_arm_id  = validated_data.pop('class_arm')
 
-                # Assign class to student
-                # Get the class (klass) using year + arm
-                klass = get_object_or_404(
-                    Class,
-                    class_year=class_year,
-                    arm_name=class_arm
-                )
+        cy  = get_object_or_404(ClassYear, class_year_id=class_year_id, school=school)
+        cls = get_object_or_404(Class, class_id=class_arm_id, school=school)
 
-                # Create StudentClass
-                StudentClass.objects.create(
-                    student=student,
-                    klass=klass
-                )
+        if cls.class_year_id != cy.class_year_id:
+            raise serializers.ValidationError(
+                {"class_arm": "Selected class_arm does not belong to the provided class_year."}
+            )
 
-                return student
+        validated_data['class_year'] = cy
+        validated_data['class_arm']  = cls
+        return super().create(validated_data)
 
-        except Exception as e:
-            raise serializers.ValidationError({"error": f"Student creation failed: {str(e)}"})
 
 
 class StudentUpdateSerializer(serializers.ModelSerializer):

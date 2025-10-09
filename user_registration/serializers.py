@@ -10,6 +10,7 @@ from .models import (
                      )
 
 from django.db import transaction
+from rest_framework.exceptions import ValidationError
 
 
 class RoleSerializer(serializers.ModelSerializer):
@@ -359,116 +360,252 @@ class RegistrationPinSerializer(serializers.ModelSerializer):
         read_only_fields = ['pin_id', 'school', 'school_name', 'is_used', 'created_at']
 
 
+from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+from django.db import transaction
+from django.shortcuts import get_object_or_404
 
-# class StudentCreateSerializer(serializers.ModelSerializer):
-#     """
-#     Serializer for creating students.
-#     Automatically assigns the 'Student' role and assigns them to a class.
-#     """
-#     user = UserSerializer()
-#     role = serializers.CharField(source='user_role.role.name', read_only=True)
-#     school = serializers.PrimaryKeyRelatedField(read_only=True)
-#     class_year = serializers.UUIDField(write_only=True)
-#     class_arm = serializers.UUIDField(write_only=True)
-
-#     class Meta:
-#         model = Student
-#         fields = [
-#             'student_id', 'user', 'role', 'school', 'admission_number', 'first_name',
-#             'middle_name', 'last_name', 'date_of_birth', 'gender', 'address', 'city', 'state',
-#             'region', 'country', 'admission_date', 'status', 'profile_picture_path',
-#             'parent_first_name', 'parent_middle_name', 'parent_last_name', 'parent_occupation',
-#             'parent_contact_info', 'parent_emergency_contact', 'parent_relationship',
-#             'class_year', 'class_arm'
-#         ]
-#         read_only_fields = ['student_id', 'role', 'school']
-
-#     def create(self, validated_data):
-#         user_data = validated_data.pop('user')
-#         class_year = validated_data.pop('class_year')
-#         class_arm = validated_data.pop('class_arm')
-
-#         try:
-#             with transaction.atomic():
-#                 user = UserSerializer().create(user_data)
-#                 student_role = Role.objects.get(name='Student')
-#                 user_role = UserRole.objects.create(user=user, role=student_role)
-#                 student = Student.objects.create(user=user, **validated_data)
-
-#                 # Assign class to student
-#                 # Get the class (klass) using year + arm
-#                 klass = get_object_or_404(
-#                     Class,
-#                     class_year=class_year,
-#                     arm_name=class_arm
-#                 )
-
-#                 # Create StudentClass
-#                 StudentClass.objects.create(
-#                     student=student,
-#                     klass=klass
-#                 )
-
-#                 return student
-
-#         except Exception as e:
-#             raise serializers.ValidationError({"error": f"Student creation failed: {str(e)}"})
-
+from .models import Student, Class, ClassYear, StudentClass, Role, UserRole
+from .serializers import UserSerializer  # your nested user serializer
 
 
 class StudentCreateSerializer(serializers.ModelSerializer):
-    # Student helpers
-    student_first_name = serializers.CharField(source='student.first_name', read_only=True)
-    student_last_name  = serializers.CharField(source='student.last_name', read_only=True)
-    student_name       = serializers.SerializerMethodField(read_only=True)
+    """
+    Creates a Student, assigns 'Student' role, and attaches StudentClass.
 
-    # IDs
-    class_year_id = serializers.UUIDField(source='class_year.class_year_id', read_only=True)
-    class_arm_id  = serializers.UUIDField(source='class_arm.class_id', read_only=True)
+    Accepts EITHER:
+      - class_year (UUID of ClassYear.class_year_id) + class_arm (UUID of Class.class_id), OR
+      - class_year_name (str) + class_arm_name (str)
 
-    # Names
-    class_year_name = serializers.CharField(source='class_year.class_name', read_only=True)
-    class_arm_name  = serializers.CharField(source='class_arm.arm_name', read_only=True)
+    Prefers UUIDs if present.
+    """
+    user   = UserSerializer()
+    role   = serializers.CharField(source='user_role.role.name', read_only=True)
+    school = serializers.PrimaryKeyRelatedField(read_only=True)
 
-    # Write inputs (UUIDs)
-    class_year = serializers.UUIDField(write_only=True, required=True)
-    class_arm  = serializers.UUIDField(write_only=True, required=True)
+    # Primary (UUID) inputs
+    class_year = serializers.UUIDField(write_only=True, required=False)
+    class_arm  = serializers.UUIDField(write_only=True, required=False)
+
+    # Alternative (name) inputs
+    class_year_name = serializers.CharField(write_only=True, required=False)
+    class_arm_name  = serializers.CharField(write_only=True, required=False)
+
+    # Optional nice read-only outputs
+    class_year_readable = serializers.SerializerMethodField(read_only=True)
+    class_arm_readable  = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
-        model = StudentClass
+        model  = Student
         fields = [
-            'student_class_id', 'student',
-            'student_first_name', 'student_last_name', 'student_name',
+            'student_id', 'user', 'role', 'school',
+            'admission_number', 'first_name', 'middle_name', 'last_name',
+            'date_of_birth', 'gender', 'address', 'city', 'state', 'region',
+            'country', 'admission_date', 'status', 'profile_picture_path',
+            'parent_first_name', 'parent_middle_name', 'parent_last_name',
+            'parent_occupation', 'parent_contact_info', 'parent_emergency_contact',
+            'parent_relationship',
 
-            # inputs
+            # inputs (use either UUIDs or names)
             'class_year', 'class_arm',
+            'class_year_name', 'class_arm_name',
 
             # outputs
-            'class_year_id', 'class_arm_id',
-            'class_year_name', 'class_arm_name',
+            'class_year_readable', 'class_arm_readable',
+        ]
+        read_only_fields = [
+            'student_id', 'role', 'school',
+            'class_year_readable', 'class_arm_readable',
         ]
 
-    def get_student_name(self, obj):
-        return f"{obj.student.last_name} {obj.student.first_name}"
+    # ---------- helpers ----------
+
+    def _derive_school(self, validated_data):
+        """Prefer school passed via serializer.save(school=...), else fallback to request.user.school_admin.school."""
+        school = validated_data.pop('school', None)
+        if school:
+            return school
+        request = self.context.get('request')
+        if request and hasattr(request.user, 'school_admin'):
+            return request.user.school_admin.school
+        raise ValidationError({"school": "School is required (admin/self-reg context must provide it)."})
+
+    def _resolve_targets(self, data, school):
+        """
+        Resolve (ClassYear, Class) using either UUIDs or names.
+        Enforce that Class belongs to ClassYear and both belong to 'school'.
+        """
+        # Prefer UUIDs if provided
+        class_year_id = data.pop('class_year', None)
+        class_arm_id  = data.pop('class_arm', None)
+
+        if class_year_id and class_arm_id:
+            cy  = get_object_or_404(ClassYear, class_year_id=class_year_id, school=school)
+            cls = get_object_or_404(Class,     class_id=class_arm_id,     school=school)
+            if cls.class_year_id != cy.class_year_id:
+                raise ValidationError({"class_arm": "Selected class_arm does not belong to the provided class_year."})
+            return cy, cls
+
+        # Fallback to names
+        cy_name  = data.pop('class_year_name', None)
+        arm_name = data.pop('class_arm_name', None)
+        if not (cy_name and arm_name):
+            raise ValidationError({
+                "class_placement": "Provide either (class_year & class_arm) UUIDs OR (class_year_name & class_arm_name)."
+            })
+
+        cy = ClassYear.objects.filter(school=school, class_name__iexact=cy_name).first()
+        if not cy:
+            raise ValidationError({"class_year_name": "Invalid class_year_name for this school."})
+
+        cls = Class.objects.filter(school=school, class_year=cy, arm_name__iexact=arm_name).first()
+        if not cls:
+            raise ValidationError({"class_arm_name": "Invalid class_arm_name for the given class_year."})
+
+        return cy, cls
+
+    def get_class_year_readable(self, obj):
+        sc = obj.student_classes.select_related('class_year').first()
+        return sc.class_year.class_name if sc else None
+
+    def get_class_arm_readable(self, obj):
+        sc = obj.student_classes.select_related('class_arm').first()
+        return sc.class_arm.arm_name if sc else None
+
+    # ---------- create ----------
 
     def create(self, validated_data):
-        request = self.context.get('request')
-        school = request.user.school_admin.school
+        user_data = validated_data.pop('user')
 
-        class_year_id = validated_data.pop('class_year')
-        class_arm_id  = validated_data.pop('class_arm')
+        # Figure out the school (either passed via save(...) or from request.user)
+        school = self._derive_school(validated_data)
 
-        cy  = get_object_or_404(ClassYear, class_year_id=class_year_id, school=school)
-        cls = get_object_or_404(Class, class_id=class_arm_id, school=school)
+        # Resolve ClassYear + Class from either UUIDs or names
+        cy, cls = self._resolve_targets(validated_data, school)
 
-        if cls.class_year_id != cy.class_year_id:
-            raise serializers.ValidationError(
-                {"class_arm": "Selected class_arm does not belong to the provided class_year."}
-            )
+        try:
+            with transaction.atomic():
+                # 1) Create user (nested)
+                user = UserSerializer().create(user_data)
 
-        validated_data['class_year'] = cy
-        validated_data['class_arm']  = cls
-        return super().create(validated_data)
+                # 2) Create student
+                student = Student.objects.create(user=user, school=school, **validated_data)
+
+                # 3) Attach 'Student' role
+                student_role = Role.objects.get(name='Student')
+                UserRole.objects.create(user=user, role=student_role)
+
+                # 4) Link StudentClass (assign by FK IDs to avoid type mix-ups)
+                StudentClass.objects.create(
+                    student=student,
+                    class_year_id=cy.class_year_id,
+                    class_arm_id=cls.class_id,
+                )
+                return student
+
+        except Role.DoesNotExist:
+            raise ValidationError({"role": "Role 'Student' not found. Seed roles first."})
+        except Exception as e:
+            raise ValidationError({"error": f"Student creation failed: {str(e)}"})
+
+
+# serializers.py
+# class StudentCreateSerializer(serializers.ModelSerializer):
+#     """
+#     Creates a Student, assigns 'Student' role, and attaches StudentClass.
+#     Expects:
+#       - class_year: UUID (ClassYear.class_year_id)
+#       - class_arm:  UUID (Class.class_id)
+#     """
+#     user   = UserSerializer()
+#     role   = serializers.CharField(source='user_role.role.name', read_only=True)
+#     school = serializers.PrimaryKeyRelatedField(read_only=True)
+
+#     # Write-only inputs
+#     class_year = serializers.UUIDField(write_only=True)
+#     class_arm  = serializers.UUIDField(write_only=True)
+
+#     # Optional nice read-only outputs
+#     class_year_name = serializers.SerializerMethodField(read_only=True)
+#     class_arm_name  = serializers.SerializerMethodField(read_only=True)
+
+#     class Meta:
+#         model  = Student
+#         fields = [
+#             'student_id', 'user', 'role', 'school',
+#             'admission_number', 'first_name', 'middle_name', 'last_name',
+#             'date_of_birth', 'gender', 'address', 'city', 'state', 'region',
+#             'country', 'admission_date', 'status', 'profile_picture_path',
+#             'parent_first_name', 'parent_middle_name', 'parent_last_name',
+#             'parent_occupation', 'parent_contact_info', 'parent_emergency_contact',
+#             'parent_relationship',
+
+#             # inputs
+#             'class_year', 'class_arm',
+
+#             # outputs
+#             'class_year_name', 'class_arm_name',
+#         ]
+#         read_only_fields = ['student_id', 'role', 'school', 'class_year_name', 'class_arm_name']
+
+#     def _derive_school(self, validated_data):
+#         # Prefer explicit school passed via serializer.save(school=...)
+#         school = validated_data.pop('school', None)
+#         if school:
+#             return school
+
+#         # Fallback to request user's school_admin
+#         request = self.context.get('request')
+#         if request and hasattr(request.user, 'school_admin'):
+#             return request.user.school_admin.school
+
+#         raise ValidationError({"school": "School is required (admin context or provided explicitly)."})
+
+#     def get_class_year_name(self, obj):
+#         sc = obj.student_classes.select_related('class_year').first()
+#         return sc.class_year.class_name if sc else None
+
+#     def get_class_arm_name(self, obj):
+#         sc = obj.student_classes.select_related('class_arm').first()
+#         return sc.class_arm.arm_name if sc else None
+
+#     def create(self, validated_data):
+#         user_data     = validated_data.pop('user')
+#         class_year_id = validated_data.pop('class_year')  # UUID
+#         class_arm_id  = validated_data.pop('class_arm')   # UUID
+
+#         school = self._derive_school(validated_data)
+
+#         # Validate targets (and school ownership)
+#         cy  = get_object_or_404(ClassYear, class_year_id=class_year_id, school=school)
+#         cls = get_object_or_404(Class,     class_id=class_arm_id,     school=school)
+#         if cls.class_year_id != cy.class_year_id:
+#             raise ValidationError({"class_arm": "Selected class_arm does not belong to the provided class_year."})
+
+#         try:
+#             with transaction.atomic():
+#                 # 1) Create user
+#                 user = UserSerializer().create(user_data)
+
+#                 # 2) Create student
+#                 student = Student.objects.create(user=user, school=school, **validated_data)
+
+#                 # 3) Attach role
+#                 student_role = Role.objects.get(name='Student')
+#                 UserRole.objects.create(user=user, role=student_role)
+
+#                 # 4) Link class (assign by FK IDs to avoid type mix-ups)
+#                 StudentClass.objects.create(
+#                     student=student,
+#                     class_year_id=cy.class_year_id,
+#                     class_arm_id=cls.class_id,
+#                 )
+#                 return student
+
+#         except Role.DoesNotExist:
+#             raise ValidationError({"role": "Role 'Student' not found. Seed roles first."})
+#         except Exception as e:
+#             raise ValidationError({"error": f"Student creation failed: {str(e)}"})
 
 
 

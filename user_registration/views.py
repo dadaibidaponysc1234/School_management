@@ -780,56 +780,89 @@ class ListRegistrationPinsView(generics.ListAPIView):
         return Response({"message": "List of registration pins.", "pins": serializer.data}, status=status.HTTP_200_OK)
 
 
+# class StudentSelfRegistrationView(generics.CreateAPIView):
+#     """
+#     Self-registration for students after OTP verification.
+#     Automatically assigns the student to class_year and class_arm.
+#     """
+#     serializer_class = StudentCreateSerializer
+
+#     def post(self, request, *args, **kwargs):
+#         temp_token = request.data.get('temp_token')
+#         class_year_name = request.data.get('class_year_name')
+#         class_arm_name = request.data.get('class_arm_name')
+
+#         if not temp_token:
+#             return Response({'error': 'Temporary token is required.'}, status=400)
+
+#         is_valid, pin = validate_temp_token(temp_token)
+#         if not is_valid:
+#             return Response({'error': 'Invalid or expired temporary token.'}, status=400)
+
+#         serializer = self.get_serializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+
+#         # Mark OTP as used
+#         pin.is_used = True
+#         pin.save()
+
+#         # Create student record
+#         student = serializer.save(school=pin.school)
+
+#         # Assign class using provided class_year_name and class_arm_name
+#         if not class_year_name or not class_arm_name:
+#             return Response({'error': 'class_year_name and class_arm_name are required.'}, status=400)
+
+#         # class_year = ClassYear.objects.filter(year_name__iexact=class_year_name, school=pin.school).first()
+#         # class_arm = Class.objects.filter(classes__arm_name__iexact=class_arm_name, school=pin.school).first()
+
+#         class_year = ClassYear.objects.filter(class_name__iexact=class_year_name, school=pin.school).first()
+#         class_arm = Class.objects.filter(arm_name__iexact=class_arm_name, school=pin.school, class_year=class_year).first()
+
+
+#         if not class_year or not class_arm:
+#             return Response({'error': 'Invalid class_year_name or class_arm_name.'}, status=400)
+
+#         StudentClass.objects.create( #gght
+#             student=student,
+#             class_year=class_year,
+#             class_arm=class_arm
+#         )
+
+#         return Response(serializer.data, status=201)
+
+
 class StudentSelfRegistrationView(generics.CreateAPIView):
     """
     Self-registration for students after OTP verification.
-    Automatically assigns the student to class_year and class_arm.
+    Accepts EITHER:
+      - class_year (UUID) + class_arm (UUID), OR
+      - class_year_name (str) + class_arm_name (str)
+    The StudentCreateSerializer handles resolving/creating StudentClass.
     """
     serializer_class = StudentCreateSerializer
 
     def post(self, request, *args, **kwargs):
-        temp_token = request.data.get('temp_token')
-        class_year_name = request.data.get('class_year_name')
-        class_arm_name = request.data.get('class_arm_name')
-
+        data = request.data.copy()
+        temp_token = data.get('temp_token')
         if not temp_token:
-            return Response({'error': 'Temporary token is required.'}, status=400)
+            return Response({'error': 'Temporary token is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
         is_valid, pin = validate_temp_token(temp_token)
         if not is_valid:
-            return Response({'error': 'Invalid or expired temporary token.'}, status=400)
+            return Response({'error': 'Invalid or expired temporary token.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = self.get_serializer(data=request.data)
+        # Let the serializer do all validation/resolution (UUIDs or names) and create Student + StudentClass
+        serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
-
-        # Mark OTP as used
-        pin.is_used = True
-        pin.save()
-
-        # Create student record
         student = serializer.save(school=pin.school)
 
-        # Assign class using provided class_year_name and class_arm_name
-        if not class_year_name or not class_arm_name:
-            return Response({'error': 'class_year_name and class_arm_name are required.'}, status=400)
+        # Mark OTP as used AFTER success
+        pin.is_used = True
+        pin.save(update_fields=['is_used'])
 
-        # class_year = ClassYear.objects.filter(year_name__iexact=class_year_name, school=pin.school).first()
-        # class_arm = Class.objects.filter(classes__arm_name__iexact=class_arm_name, school=pin.school).first()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        class_year = ClassYear.objects.filter(class_name__iexact=class_year_name, school=pin.school).first()
-        class_arm = Class.objects.filter(arm_name__iexact=class_arm_name, school=pin.school, class_year=class_year).first()
-
-
-        if not class_year or not class_arm:
-            return Response({'error': 'Invalid class_year_name or class_arm_name.'}, status=400)
-
-        StudentClass.objects.create( #gght
-            student=student,
-            class_year=class_year,
-            class_arm=class_arm
-        )
-
-        return Response(serializer.data, status=201)
 
 
 class StudentUpdateView(generics.RetrieveUpdateAPIView):

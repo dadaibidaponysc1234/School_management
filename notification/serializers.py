@@ -2,13 +2,10 @@ from rest_framework import serializers
 from user_registration.models import Notification,Teacher, Class
 
 class NotificationSerializer(serializers.ModelSerializer):
-    """
-    Serializer for Notification model.
-    """
     class Meta:
         model = Notification
         fields = '__all__'
-        read_only_fields = ['created_at', 'is_read']
+        read_only_fields = ['notification_id', 'school', 'created_by', 'created_at', 'is_read']
 
 class NotificationCreateSerializer(serializers.ModelSerializer):
     """

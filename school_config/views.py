@@ -484,18 +484,51 @@ class ClassTeacherListView(generics.ListAPIView):
         return ClassTeacher.objects.filter(school=school)
 
 
-class ClassTeacherUpdateDeleteView(generics.RetrieveDestroyAPIView):
+class ClassTeacherUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     """
-    Update a class-teacher assignment.
+    Retrieve, update (PUT/PATCH), or delete a class-teacher assignment.
     """
-    serializer_class = ClassTeacherSerializer
+    serializer_class   = ClassTeacherSerializer
     permission_classes = [IsschoolAdmin]
-    lookup_field = 'pk'
+    lookup_field       = "class_teacher_id"
+    lookup_url_kwarg   = "class_teacher_id"
 
     def get_queryset(self):
-        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+        if (getattr(self, 'swagger_fake_view', False) or
+            not getattr(self.request, 'user', None) or
+            not self.request.user.is_authenticated or
+            not getattr(self.request.user, 'school_admin', None)):
             return ClassTeacher.objects.none()
-        return ClassTeacher.objects.filter(school=self.request.user.school_admin.school)
+
+        school = self.request.user.school_admin.school
+        return ClassTeacher.objects.filter(school=school).select_related(
+            "class_assigned", "teacher", "school"
+        )
+
+    # --- add these three ---
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(
+            {"message": "Class-teacher assignment updated successfully.", "data": serializer.data},
+            status=status.HTTP_200_OK
+        )
+
+    def partial_update(self, request, *args, **kwargs):
+        kwargs["partial"] = True
+        return self.update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(
+            {"message": "Class-teacher assignment deleted successfully."},
+            status=status.HTTP_200_OK
+        )
 
 
 class DeleteMultipleClassTeachersView(APIView):
@@ -611,26 +644,40 @@ class SubjectClassDetailView(generics.RetrieveUpdateDestroyAPIView):
         serializer.save(school=school)
 
 #################################################################################################################
+
 class ClassDepartmentListCreateView(generics.ListCreateAPIView):
-    serializer_class = ClassDepartmentSerializer
+    serializer_class   = ClassDepartmentSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['classes', 'department']
-    search_fields = ['classes__arm_name', 'department__name']
+    filter_backends    = [DjangoFilterBackend, filters.SearchFilter]
+
+    # allow filtering by class, class_year, and department
+    filterset_fields = ['classes', 'classes__class_year', 'department']
+    # allow searching by arm name and class year name
+    search_fields    = ['classes__arm_name', 'classes__class_year__class_name', 'department__name']
 
     def get_queryset(self):
-        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+        if (getattr(self, 'swagger_fake_view', False) or
+            not getattr(self.request, 'user', None) or
+            not self.request.user.is_authenticated or
+            not getattr(self.request.user, 'school_admin', None)):
             return ClassDepartment.objects.none()
-        return ClassDepartment.objects.filter(school=self.request.user.school_admin.school)
-    
-    def perform_create(self, serializer):
-        school = self.request.user.school_admin.school
-        classes = serializer.validated_data['classes']
-        department = serializer.validated_data.get('department', None)
 
-        if department and department.school != school:
+        school = self.request.user.school_admin.school
+        return (ClassDepartment.objects
+                .filter(school=school)
+                .select_related('school', 'department', 'classes', 'classes__class_year'))
+
+    def perform_create(self, serializer):
+        school    = self.request.user.school_admin.school
+        classes   = serializer.validated_data['classes']
+        department = serializer.validated_data.get('department')
+
+        # ensure all belong to same school
+        if classes.school_id != school.id:
+            raise ValidationError("Selected class must belong to the same school.")
+        if department and department.school_id != school.id:
             raise ValidationError("Department must belong to the same school.")
-        
+
         serializer.save(school=school)
 
 class ClassDepartmentDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -656,45 +703,59 @@ class ClassDepartmentDetailView(generics.RetrieveUpdateDestroyAPIView):
 #################################################################################################################
 
 class TeacherAssignmentListCreateView(generics.ListCreateAPIView):
-    """
-    API to list and create teacher assignments.
-    Accessible by School Admins.
-    """
-    serializer_class = TeacherAssignmentSerializer
+    serializer_class   = TeacherAssignmentSerializer
     permission_classes = [IsschoolAdmin]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['teacher', 'subject_class', 'class_department_assigned', 'school']
+    filter_backends    = [DjangoFilterBackend, filters.SearchFilter]
+
+    # ✅ Allow filtering by class year too
+    filterset_fields = [
+        'teacher', 'subject_class', 'class_department_assigned', 'school',
+        'class_department_assigned__classes__class_year'  # 👈 added
+    ]
+    # ✅ Allow searching by class year name
     search_fields = [
         'teacher__first_name', 'teacher__last_name',
         'subject_class__subject__name',
         'class_department_assigned__classes__arm_name',
-        'subject_class__department__name'
+        'subject_class__department__name',
+        'class_department_assigned__classes__class_year__class_name',  # 👈 added
     ]
-    
+
     def get_queryset(self):
-        """
-        Returns assignments only for the authenticated School Admin's school.
-        """
-        # Short-circuit during schema generation or when unauthenticated
-        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+        if (getattr(self, 'swagger_fake_view', False) or
+            not getattr(self.request, 'user', None) or
+            not self.request.user.is_authenticated or
+            not getattr(self.request.user, 'school_admin', None)):
             return TeacherAssignment.objects.none()
-        return TeacherAssignment.objects.filter(school=self.request.user.school_admin.school)
+
+        school = self.request.user.school_admin.school
+        return (
+            TeacherAssignment.objects
+            .filter(school=school)
+            .select_related(
+                'school',
+                'teacher',
+                'subject_class', 'subject_class__subject', 'subject_class__department',
+                'class_department_assigned',
+                'class_department_assigned__classes',
+                'class_department_assigned__classes__class_year'  # 👈 eager-load year
+            )
+        )
 
     def perform_create(self, serializer):
-        """
-        Ensures that the teacher, subject, and class belong to the same school.
-        """
         school = self.request.user.school_admin.school
         teacher = serializer.validated_data['teacher']
         subject_class = serializer.validated_data['subject_class']
-        class_department_assigned = serializer.validated_data['class_department_assigned']
+        class_dept = serializer.validated_data['class_department_assigned']
 
-        for obj in [teacher, subject_class, class_department_assigned]:
-            if obj.school != school:
-                raise ValidationError("Teacher, subject, and class must belong to your school.")
+        if teacher.school_id != school.id:
+            raise ValidationError("Teacher must belong to your school.")
+        if subject_class.school_id != school.id:
+            raise ValidationError("Subject class must belong to your school.")
+        if class_dept.school_id != school.id:
+            raise ValidationError("Class/department must belong to your school.")
 
         serializer.save(school=school)
-
 
 class TeacherAssignmentDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
@@ -729,55 +790,80 @@ class TeacherAssignmentDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 #####################################################################################################
 
+# views.py
 class StudentClassListView(generics.ListAPIView):
-    """
-    List all student-class assignments.
-    - School Admin: View all students in school.
-    - Class Teacher: View students in their assigned class.
-    - Student: View only their own class.
-    """
-    serializer_class = StudentClassSerializer
-    # permission_classes = [IsAuthenticated]
-    # permission_classes = [IsClassTeacher]
-    permission_classes = [SchoolAdminOrIsClassTeacherOrISstudent]
+    serializer_class   = StudentClassSerializer
+    permission_classes = [IsAuthenticated, SchoolAdminOrIsClassTeacherOrISstudent]
 
-    def get_queryset(self): #gght
-        # Short-circuit during schema generation or when unauthenticated
-        if getattr(self, 'swagger_fake_view', False) or not getattr(self, 'request', None) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False):
+    def _current_school(self, user):
+        for rel in ("school_admin", "teacher", "student"):
+            obj = getattr(user, rel, None)
+            if obj:
+                return getattr(obj, "school", None)
+        return None
+
+    def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
             return StudentClass.objects.none()
 
-        user = self.request.user
+        u = getattr(self.request, "user", None)
+        if not (u and u.is_authenticated):
+            return StudentClass.objects.none()
 
-        if hasattr(user, 'school_admin'):
-            school = user.school_admin.school
-            return StudentClass.objects.filter(student__school=school)
+        school = self._current_school(u)
+        base = StudentClass.objects.filter(student__school=school)\
+            .select_related("student", "class_year", "class_arm", "class_year__school")
 
-        elif hasattr(user, 'teacher'):
-            # Assuming ClassTeacher model exists and links teacher to a class
-            class_ids = user.teacher.assigned_classes.values_list('class_assigned__class_id', flat=True)
-            return StudentClass.objects.filter(klass__in=class_ids)
+        # School Admin → all in school
+        if getattr(u, "school_admin", None):
+            return base
 
-        elif hasattr(user, 'student'):
-            return StudentClass.objects.filter(student=user.student)
+        # Teacher → students in teacher's classes (try common schemas safely)
+        teacher = getattr(u, "teacher", None)
+        if teacher:
+            # Try a through model like TeacherClass(teacher, class_arm)
+            try:
+                class_ids = list(teacher.assigned_classes.values_list("class_assigned__class_id", flat=True))
+                if class_ids:
+                    return base.filter(class_arm_id__in=class_ids)
+            except Exception:
+                pass
+            # Try direct M2M: Class.teachers
+            try:
+                return base.filter(class_arm__teachers=teacher)
+            except Exception:
+                pass
+            # Optional single pointer
+            try:
+                current = getattr(teacher, "current_class_arm", None)
+                if current:
+                    return base.filter(class_arm=current)
+            except Exception:
+                pass
+            return StudentClass.objects.none()
 
-        # If user does not match any known role, return an empty queryset
+        # Student → only their record(s)
+        student = getattr(u, "student", None)
+        if student:
+            return base.filter(student=student)
+
         return StudentClass.objects.none()
 
 
 class StudentClassUpdateView(generics.UpdateAPIView):
-    """
-    Update a specific student-class assignment.
-    - Only School Admins can update.
-    """
-    serializer_class = StudentClassSerializer
-    # permission_classes = [IsschoolAdmin]
-    permission_classes = [SchoolAdminOrIsClassTeacherOrISstudent]
-    lookup_field = 'student_class_id'
+    serializer_class   = StudentClassSerializer
+    permission_classes = [IsAuthenticated, SchoolAdminOrIsClassTeacherOrISstudent]
+    lookup_field       = "student_class_id"
 
     def get_queryset(self):
-        if getattr(self, 'swagger_fake_view', False) or not getattr(self.request, 'user', None) or not getattr(self.request.user, 'is_authenticated', False) or not hasattr(self.request.user, 'school_admin'):
+        if getattr(self, "swagger_fake_view", False):
             return StudentClass.objects.none()
-        return StudentClass.objects.filter(student__school=self.request.user.school_admin.school)
+        u = getattr(self.request, "user", None)
+        if not (u and u.is_authenticated and getattr(u, "school_admin", None)):
+            return StudentClass.objects.none()
+        school = u.school_admin.school
+        return StudentClass.objects.filter(student__school=school)\
+            .select_related("student", "class_year", "class_arm", "class_year__school")
 
 
 #####################################################################################################

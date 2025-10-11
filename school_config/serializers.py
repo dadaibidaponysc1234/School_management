@@ -153,33 +153,63 @@ class BulkSubjectClassAssignmentSerializer(serializers.Serializer):
 
 
 #############################################################################################################
+
 class ClassDepartmentSerializer(serializers.ModelSerializer):
-    class_name = serializers.CharField(source='classes.arm_name', read_only=True)
-    school_name = serializers.CharField(source='school.school_name', read_only=True)
-    department_name = serializers.CharField(source='department.name', read_only=True)
-    
+    # Read-friendly class info
+    class_id         = serializers.UUIDField(source='classes.class_id', read_only=True)
+    class_arm_name   = serializers.CharField(source='classes.arm_name', read_only=True)
+
+    class_year_id    = serializers.UUIDField(source='classes.class_year.class_year_id', read_only=True)
+    class_year_name  = serializers.CharField(source='classes.class_year.class_name', read_only=True)
+
+    school_name      = serializers.CharField(source='school.school_name', read_only=True)
+    department_name  = serializers.CharField(source='department.name', read_only=True)
+
     class Meta:
         model = ClassDepartment
-        fields = ['subject_class_id', 'school', 'classes', 'department', 'class_name', 'school_name', 'department_name']
-        read_only_fields = ['school']
+        fields = [
+            'subject_class_id',
+            'school',           # write: FK UUID
+            'classes',          # write: FK UUID (Class)
+            'department',       # write: FK UUID (optional)
+            # read-only extras
+            'class_id',
+            'class_arm_name',
+            'class_year_id',
+            'class_year_name',
+            'school_name',
+            'department_name',
+        ]
+        read_only_fields = ['school', 'class_id', 'class_arm_name', 'class_year_id', 'class_year_name',
+                            'school_name', 'department_name']
 
 #############################################################################################################
 class TeacherAssignmentSerializer(serializers.ModelSerializer):
-    """
-    Serializer for teacher assignments to subjects and classes.
-    """
-    teacher_name = serializers.CharField(source='teacher.first_name', read_only=True)
+    # Existing read-onlys
+    teacher_name     = serializers.CharField(source='teacher.first_name', read_only=True)
     teacher_lastname = serializers.CharField(source='teacher.last_name', read_only=True)
-    subject_name = serializers.CharField(source='subject_class.subject.name', read_only=True)
-    class_name = serializers.CharField(source='class_department_assigned.classes.arm_name', read_only=True)
-    school_name = serializers.CharField(source='school.school_name', read_only=True)
-    department_name = serializers.CharField(source='subject_class.department.name', read_only=True)
+    subject_name     = serializers.CharField(source='subject_class.subject.name', read_only=True)
+    class_name       = serializers.CharField(source='class_department_assigned.classes.arm_name', read_only=True)
+    school_name      = serializers.CharField(source='school.school_name', read_only=True)
+    department_name  = serializers.CharField(source='subject_class.department.name', read_only=True)
+
+    # ✅ New: class year (via ClassDepartment → Class → ClassYear)
+    class_year_id    = serializers.UUIDField(
+        source='class_department_assigned.classes.class_year.class_year_id',
+        read_only=True
+    )
+    class_year_name  = serializers.CharField(
+        source='class_department_assigned.classes.class_year.class_name',
+        read_only=True
+    )
 
     class Meta:
-        model = TeacherAssignment
+        model  = TeacherAssignment
         fields = [
             'teacher_subject_id', 'teacher', 'subject_class', 'class_department_assigned', 'school',
-            'teacher_name', 'teacher_lastname', 'subject_name', 'class_name', 'school_name', 'department_name'
+            'teacher_name', 'teacher_lastname', 'subject_name', 'class_name',
+            'class_year_id', 'class_year_name',         # 👈 added
+            'school_name', 'department_name'
         ]
         extra_kwargs = {
             'teacher': {'write_only': True},
@@ -187,74 +217,74 @@ class TeacherAssignmentSerializer(serializers.ModelSerializer):
             'class_department_assigned': {'write_only': True},
         }
         read_only_fields = ['teacher_subject_id', 'school']
-        
+
 #############################################################################################################
 
 class StudentClassSerializer(serializers.ModelSerializer):
+    # Read-friendly fields
     student_first_name = serializers.CharField(source='student.first_name', read_only=True)
-    student_last_name = serializers.CharField(source='student.last_name', read_only=True)
-    student_name = serializers.SerializerMethodField()
-    class_year_name = serializers.CharField(source="klass.class_year.class_name")
+    student_last_name  = serializers.CharField(source='student.last_name', read_only=True)
+    student_name       = serializers.SerializerMethodField(read_only=True)
 
-    # Same names used for input and output
-    class_year = serializers.UUIDField()
-    class_arm = serializers.CharField()
+    class_year_id   = serializers.UUIDField(source="class_year.class_year_id", read_only=True)
+    class_year_name = serializers.CharField(source="class_year.class_name", read_only=True)
+    class_arm_id    = serializers.UUIDField(source="class_arm.class_id", read_only=True)
+    class_arm_name  = serializers.CharField(source="class_arm.arm_name", read_only=True)
+
+    # Write inputs (UUIDs) for create/update
+    class_year = serializers.UUIDField(write_only=True, required=False)
+    class_arm  = serializers.UUIDField(write_only=True, required=False)
 
     class Meta:
-        model = StudentClass
+        model  = StudentClass
         fields = [
-            'student_class_id',
-            'student',
-            'student_first_name',
-            'student_last_name',
-            'student_name',
-            'class_year',
-            'class_arm',
+            "student_class_id",
+            "is_active",
+
+            "student",
+            "student_first_name",
+            "student_last_name",
+            "student_name",
+
+            "class_year_id",
+            "class_year_name",
+            "class_arm_id",
+            "class_arm_name",
+
+            "class_year",   # write-only
+            "class_arm",    # write-only
         ]
 
     def get_student_name(self, obj):
-        return f"{obj.student.last_name} {obj.student.first_name}"
+        s = getattr(obj, "student", None)
+        if not s: return None
+        first = getattr(s, "first_name", "") or ""
+        last  = getattr(s, "last_name", "") or ""
+        name = f"{last} {first}".strip()
+        return name or None
 
-    def to_representation(self, instance):
-        """Override how serializer outputs data"""
-        rep = super().to_representation(instance)
-        rep['class_year'] = instance.klass.class_year.class_name
-        rep['class_arm'] = instance.klass.arm_name
-        return rep
+    def _resolve_fk(self, model, pk, field_name):
+        try:
+            return model.objects.get(pk=pk)
+        except model.DoesNotExist:
+            raise serializers.ValidationError({field_name: f"Invalid {field_name}."})
 
     def create(self, validated_data):
-        class_year = validated_data.pop("class_year")
-        class_arm = validated_data.pop("class_arm")
-
-        try:
-            klass = Class.objects.get(
-                class_year__class_name=class_year,
-                arm_name=class_arm
-            )
-        except Class.DoesNotExist:
-            raise serializers.ValidationError(
-                {"klass": "No class found with the given year and arm."}
-            )
-
-        validated_data["klass"] = klass
+        year_id = validated_data.pop("class_year", None)
+        arm_id  = validated_data.pop("class_arm", None)
+        if year_id:
+            validated_data["class_year"] = self._resolve_fk(ClassYear, year_id, "class_year")
+        if arm_id:
+            validated_data["class_arm"]  = self._resolve_fk(Class, arm_id, "class_arm")
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        class_year = validated_data.pop("class_year", None)
-        class_arm = validated_data.pop("class_arm", None)
-
-        if class_year and class_arm:
-            try:
-                klass = Class.objects.get(
-                    class_year__class_name=class_year,
-                    arm_name=class_arm
-                )
-                validated_data["klass"] = klass
-            except Class.DoesNotExist:
-                raise serializers.ValidationError(
-                    {"klass": "No class found with the given year and arm."}
-                )
-
+        year_id = validated_data.pop("class_year", None)
+        arm_id  = validated_data.pop("class_arm", None)
+        if year_id:
+            validated_data["class_year"] = self._resolve_fk(ClassYear, year_id, "class_year")
+        if arm_id:
+            validated_data["class_arm"]  = self._resolve_fk(Class, arm_id, "class_arm")
         return super().update(instance, validated_data)
 
 

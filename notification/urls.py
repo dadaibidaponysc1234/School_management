@@ -9,7 +9,7 @@ from .views import (
 
 urlpatterns = [
     path('notifications/', NotificationListCreateView.as_view(), name='notification-list-create'),
-    path('notifications/<uuid:pk>/', NotificationDetailView.as_view(), name='notification-detail'),
+    path('notifications/<uuid:notification_id>/', NotificationDetailView.as_view(), name='notification-detail'),
     path('notifications/recent/', RecentNotificationsView.as_view(), name='recent-notifications'),
 
     path('notifications/teacher-and-everyone/', TeacherAndEveryoneNotificationView.as_view(), name='teacher-and-everyone-notifications'),

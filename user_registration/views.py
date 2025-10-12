@@ -20,6 +20,8 @@ from rest_framework import status,generics, permissions, parsers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
 from .permissions import (IsSuperAdmin,IsschoolAdmin,ISteacher,
                           ISstudent,IsSuperAdminOrSchoolAdmin,IsClassTeacher,
                           HasValidPinAndSchoolId,IsStudentReadOnly,IsTeacherReadOnly,IsSchoolAdminReadOnly)
@@ -57,25 +59,50 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
 
-#view for Logout
 class LogoutView(APIView):
-    permission_classes = [IsAuthenticated]  # Ensure authentication is required
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        """
+        Logs out the current user by blacklisting the refresh token.
+        Accepts:
+          - JSON body: {"refresh_token": "<token>"}
+          - or cookie named "refresh_token"
+        Idempotent: if token is invalid/already blacklisted, returns 200 with a safe message.
+        """
+        # 1) Get refresh token from JSON or cookie
+        refresh_token = (
+            request.data.get("refresh_token")
+            or request.COOKIES.get("refresh_token")
+        )
+        if not refresh_token:
+            return Response(
+                {"error": "Refresh token is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 2) Try to blacklist it
         try:
-            # Extract the refresh token from the request data
-            refresh_token = request.data.get('refresh_token')
-            if not refresh_token:
-                return Response({"error": "Refresh token is required"}, status=400)
-
-            # Blacklist the refresh token
             token = RefreshToken(refresh_token)
+            # If blacklist app is enabled, this works; otherwise it raises
             token.blacklist()
+        except TokenError:
+            # Covers invalid/expired/already blacklisted → treat as already logged out
+            return Response(
+                {"message": "Already logged out or invalid token."},
+                status=status.HTTP_200_OK
+            )
+        except Exception:
+            # If blacklist app not installed or other error
+            return Response(
+                {"error": "Token blacklisting unavailable. Ensure token_blacklist app is installed."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
-            return Response({"message": "Logged out successfully"}, status=200)
-
-        except Exception as e:
-            return Response({"error": "Invalid token"}, status=400)
+        # 3) Clear cookie (if you set one on login)
+        resp = Response({"message": "Logged out successfully."}, status=status.HTTP_200_OK)
+        resp.delete_cookie("refresh_token")
+        return resp
 
 
 #view for Registrated for view

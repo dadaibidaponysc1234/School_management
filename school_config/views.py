@@ -2,7 +2,8 @@ from django.shortcuts import render
 from user_registration.models import (ComplianceVerification, School, Student, SuperAdmin, Year,Term,ClassYear,Class,Classroom,
                      Teacher,Department,Subject,ClassTeacher,
                      TeacherAssignment,StudentSubjectRegistration,
-                     SubjectClass,ClassDepartment,StudentClass, Day,Period,SubjectPeriodLimit,Constraint)
+                     SubjectClass,ClassDepartment,StudentClass, 
+                     SubjectRegistrationControl,Day,Period,SubjectPeriodLimit,Constraint)
 
 
 from .serializers import (ComplianceVerificationMetricsSerializer, SuperAdminMetricsSerializer, YearSerializer,TermSerializer,ClassYearSerializer,
@@ -952,29 +953,29 @@ class StudentSubjectRegistrationDetailView(generics.RetrieveUpdateDestroyAPIView
             raise PermissionDenied("Students are not allowed to delete registrations.")
         instance.delete()
 
-
+##################################################################################################################################
 class SubjectRegistrationControlView(generics.RetrieveUpdateAPIView):
-    """
-    Allows the School Admin to retrieve or update the subject registration control.
-    Only one instance per school.
-    """
     permission_classes = [IsschoolAdmin]
 
     def get_object(self):
+        # get the admin's school
         school = getattr(self.request.user.school_admin, "school", None)
         if not school:
             raise exceptions.PermissionDenied("No school found for this admin.")
 
-        registration_control = getattr(school, "registration_control", None)
-        if not registration_control:
-            raise exceptions.NotFound("Create a Registration Control first.")
+        # auto-create if missing
+        obj, _created = SubjectRegistrationControl.objects.get_or_create(
+            school=school,
+            defaults={"is_open": False, "start_date": None, "end_date": None},
+        )
+        return obj
 
-        return registration_control
-    
     def get_serializer_class(self):
-        if self.request.method == 'GET':
-            return SubjectRegistrationControlSerializer
-        return SubjectRegistrationControlUpdateSerializer
+        return (
+            SubjectRegistrationControlSerializer
+            if self.request.method == "GET"
+            else SubjectRegistrationControlUpdateSerializer
+        )
 
 
 class UpdateSubjectRegistrationStatusView(generics.UpdateAPIView):

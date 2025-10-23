@@ -487,44 +487,109 @@ class SubjectRegistrationControl(models.Model):
 
 
 # models.py (snippet for StudentSubjectRegistration)
+import uuid
+from django.db import models
+from django.core.exceptions import ValidationError
+
+STATUS_CHOICES = (
+    ("Pending", "Pending"),
+    ("Approved", "Approved"),
+    ("Rejected", "Rejected"),
+)
+
 class StudentSubjectRegistration(models.Model):
     registration_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    student_class = models.ForeignKey('StudentClass', on_delete=models.CASCADE, related_name="subject_registrations")
-    subject_class = models.ForeignKey('SubjectClass', on_delete=models.CASCADE, related_name="subject_registrations")
-    term = models.ForeignKey('Term', on_delete=models.CASCADE, related_name="subject_registrations")
-    school = models.ForeignKey('School', on_delete=models.CASCADE, related_name="subject_registrations", null=True, blank=True)
+
+    student_class = models.ForeignKey(
+        'StudentClass',
+        on_delete=models.CASCADE,
+        related_name="subject_registrations",
+    )
+    subject_class = models.ForeignKey(
+        'SubjectClass',
+        on_delete=models.CASCADE,
+        related_name="subject_registrations",
+    )
+    term = models.ForeignKey(
+        'Term',
+        on_delete=models.CASCADE,
+        related_name="subject_registrations",
+    )
+    school = models.ForeignKey(
+        'School',
+        on_delete=models.CASCADE,
+        related_name="subject_registrations",
+        null=True,
+        blank=True,
+    )
 
     # Class history snapshot at the time of registration
-    class_year_name = models.CharField(max_length=100,null=True, blank=True)
-    class_arm_name = models.CharField(max_length=100,null=True, blank=True)
+    class_year_name = models.CharField(max_length=100, null=True, blank=True)
+    class_arm_name  = models.CharField(max_length=100, null=True, blank=True)
 
-    status = models.CharField(
-        max_length=20,
-        choices=[
-            ('Pending', 'Pending'),
-            ('Approved', 'Approved'),
-            ('Rejected', 'Rejected')
-        ],
-        default='Pending'
-    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Pending")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ('student_class', 'subject_class', 'term')
+        unique_together = ("student_class", "subject_class", "term")
         verbose_name = "Student Subject Registration"
         verbose_name_plural = "Student Subject Registrations"
 
     def save(self, *args, **kwargs):
-        if self.student_class:
-            self.class_year_name = self.student_class.class_year.class_name
-            self.class_arm_name = self.student_class.class_arm.classes.arm_name
-        if self.student_class and not self.school:
-            self.school = self.student_class.student.school
+        """
+        - Fills class_year_name / class_arm_name from student_class snapshot
+        - Derives school from student_class.student.school if not provided
+        - Auto-assigns active Term for the school if term is missing
+        """
+        sc = getattr(self, "student_class", None)
 
-        if not self.term and self.school:
-            active_term = Term.objects.filter(school=self.school, status=True).first()
+        # If only FK id is set, fetch with the minimal related fields required
+        if sc is None and getattr(self, "student_class_id", None):
+            sc = (
+                StudentClass.objects
+                .select_related("class_year", "class_arm", "student__school")
+                .only(
+                    "id",
+                    "class_year__class_name",
+                    "class_arm__arm_name",
+                    "student__school_id",
+                )
+                .filter(pk=self.student_class_id)
+                .first()
+            )
+            if sc:
+                self.student_class = sc
+
+        if sc:
+            cy = getattr(sc, "class_year", None)
+            if cy:
+                # Your ClassYear uses `class_name`
+                self.class_year_name = getattr(cy, "class_name", "") or ""
+
+            ca = getattr(sc, "class_arm", None)
+            if ca:
+                # Read directly from class_arm; there is no `.classes`
+                self.class_arm_name = getattr(ca, "arm_name", "") or ""
+
+            # Derive school from student's school if not provided
+            if not getattr(self, "school_id", None):
+                school_id = (
+                    getattr(getattr(sc.student, "school", None), "id", None)
+                    or getattr(sc.student, "school_id", None)
+                )
+                if school_id:
+                    self.school_id = school_id
+
+        # Auto-assign active term if not provided but school is known
+        if not getattr(self, "term_id", None) and getattr(self, "school_id", None):
+            active_term = (
+                Term.objects
+                .filter(school_id=self.school_id, status=True)
+                .only("id", "name")
+                .first()
+            )
             if not active_term:
                 raise ValidationError("No active term found for this school.")
             self.term = active_term
@@ -532,7 +597,11 @@ class StudentSubjectRegistration(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.student_class.student.last_name} - {self.subject_class.subject.name} ({self.term.name})"
+        # Be defensive to avoid AttributeError if relations are missing in admin lists, etc.
+        student_last = getattr(getattr(self.student_class, "student", None), "last_name", "Student")
+        subject_name = getattr(getattr(self.subject_class, "subject", None), "name", "Subject")
+        term_name    = getattr(self.term, "name", "Term")
+        return f"{student_last} - {subject_name} ({term_name})"
     
 
 ################ RESULT MODULE ##################

@@ -792,6 +792,64 @@ class TeacherAssignmentDetailView(generics.RetrieveUpdateDestroyAPIView):
 #####################################################################################################
 
 # views.py
+# class StudentClassListView(generics.ListAPIView):
+#     serializer_class   = StudentClassSerializer
+#     permission_classes = [IsAuthenticated, SchoolAdminOrIsClassTeacherOrISstudent]
+    
+#     def _current_school(self, user):
+#         for rel in ("school_admin", "teacher", "student"):
+#             obj = getattr(user, rel, None)
+#             if obj:
+#                 return getattr(obj, "school", None)
+#         return None
+
+#     def get_queryset(self):
+#         if getattr(self, "swagger_fake_view", False):
+#             return StudentClass.objects.none()
+
+#         u = getattr(self.request, "user", None)
+#         if not (u and u.is_authenticated):
+#             return StudentClass.objects.none()
+
+#         school = self._current_school(u)
+#         base = StudentClass.objects.filter(student__school=school)\
+#             .select_related("student", "class_year", "class_arm", "class_year__school")
+
+#         # School Admin → all in school
+#         if getattr(u, "school_admin", None):
+#             return base
+
+#         # Teacher → students in teacher's classes (try common schemas safely)
+#         teacher = getattr(u, "teacher", None)
+#         if teacher:
+#             # Try a through model like TeacherClass(teacher, class_arm)
+#             try:
+#                 class_ids = list(teacher.assigned_classes.values_list("class_assigned__class_id", flat=True))
+#                 if class_ids:
+#                     return base.filter(class_arm_id__in=class_ids)
+#             except Exception:
+#                 pass
+#             # Try direct M2M: Class.teachers
+#             try:
+#                 return base.filter(class_arm__teachers=teacher)
+#             except Exception:
+#                 pass
+#             # Optional single pointer
+#             try:
+#                 current = getattr(teacher, "current_class_arm", None)
+#                 if current:
+#                     return base.filter(class_arm=current)
+#             except Exception:
+#                 pass
+#             return StudentClass.objects.none()
+
+#         # Student → only their record(s)
+#         student = getattr(u, "student", None)
+#         if student:
+#             return base.filter(student=student)
+
+#         return StudentClass.objects.none()
+
 class StudentClassListView(generics.ListAPIView):
     serializer_class   = StudentClassSerializer
     permission_classes = [IsAuthenticated, SchoolAdminOrIsClassTeacherOrISstudent]
@@ -812,29 +870,46 @@ class StudentClassListView(generics.ListAPIView):
             return StudentClass.objects.none()
 
         school = self._current_school(u)
-        base = StudentClass.objects.filter(student__school=school)\
-            .select_related("student", "class_year", "class_arm", "class_year__school")
+        if not school:
+            return StudentClass.objects.none()
 
-        # School Admin → all in school
+        # Optional URL param: /student-classes/<student_id>/
+        student_id = self.kwargs.get("student_id")
+
+        base = (
+            StudentClass.objects
+            .filter(student__school=school)
+            .select_related("student", "class_year", "class_arm", "class_year__school")
+        )
+
+        # If a specific student_id is requested, narrow first
+        if student_id:
+            base = base.filter(student__student_id=student_id)
+
+        # --- Role-based scoping ---
+        # School Admin → can see whatever 'base' currently holds (all or the specific student)
         if getattr(u, "school_admin", None):
             return base
 
-        # Teacher → students in teacher's classes (try common schemas safely)
+        # Teacher → only students in teacher's assigned classes
         teacher = getattr(u, "teacher", None)
         if teacher:
-            # Try a through model like TeacherClass(teacher, class_arm)
+            # Prefer robust filtering; try different relationship shapes safely
+            # 1) through model where FK is class_assigned -> Class (or ClassArm)
             try:
-                class_ids = list(teacher.assigned_classes.values_list("class_assigned__class_id", flat=True))
+                class_ids = list(
+                    teacher.assigned_classes.values_list("class_assigned__class_id", flat=True)
+                )
                 if class_ids:
                     return base.filter(class_arm_id__in=class_ids)
             except Exception:
                 pass
-            # Try direct M2M: Class.teachers
+            # 2) direct M2M: ClassArm.teachers
             try:
                 return base.filter(class_arm__teachers=teacher)
             except Exception:
                 pass
-            # Optional single pointer
+            # 3) single FK pointer on teacher
             try:
                 current = getattr(teacher, "current_class_arm", None)
                 if current:
@@ -843,9 +918,13 @@ class StudentClassListView(generics.ListAPIView):
                 pass
             return StudentClass.objects.none()
 
-        # Student → only their record(s)
+        # Student → only their own records
         student = getattr(u, "student", None)
         if student:
+            if student_id and str(student.student_id) != str(student_id):
+                # Requesting someone else — deny
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied("You can only view your own class records.")
             return base.filter(student=student)
 
         return StudentClass.objects.none()

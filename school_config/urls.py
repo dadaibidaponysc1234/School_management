@@ -60,6 +60,7 @@ urlpatterns = [
     path('assignments/teacher_assignments/<uuid:pk>/', TeacherAssignmentDetailView.as_view(), name='teacher-assignment-detail'),
 
     path('assignments/student-classes/', StudentClassListView.as_view(), name='student-class-list'),
+    path('assignments/student-classes/<uuid:student_id>/', StudentClassListView.as_view(), name="studentclass-by-student"),
     path('assignments/student-classes/<uuid:student_class_id>/update/', StudentClassUpdateView.as_view(), name='student-class-update'),
 
     path('assignments/student-subject-registrations/', StudentSubjectRegistrationListCreateView.as_view(), name='student-subject-registration-list-create'),

@@ -293,43 +293,154 @@ class StudentClassSerializer(serializers.ModelSerializer):
 # from user_registration.models import 
 
 
+# class StudentSubjectRegistrationSerializer(serializers.ModelSerializer):
+#     # Related fields for better readability
+#     student_id = serializers.UUIDField(source='student_class.student.student_id', read_only=True)
+#     student_firstname = serializers.CharField(source='student_class.student.first_name', read_only=True)
+#     student_surname = serializers.CharField(source='student_class.student.last_name', read_only=True)
+#     student_admission_number = serializers.CharField(source='student_class.student.admission_number', read_only=True)
+#     class_year = serializers.CharField(source='student_class.class_year.name', read_only=True)
+#     class_arm = serializers.CharField(source='student_class.class_arm.classes.arm_name', read_only=True)
+#     department = serializers.CharField(source='subject_class.department.name', read_only=True)
+#     subject_name = serializers.CharField(source='subject_class.subject.name', read_only=True)
+#     subject_id = serializers.UUIDField(source='subject_class.subject.subject_id', read_only=True)
+#     term_name = serializers.CharField(source='term.name', read_only=True)
+#     school_name = serializers.CharField(source='school.school_name', read_only=True)
+#     student_name = serializers.SerializerMethodField()
+
+#     class Meta:
+#         model = StudentSubjectRegistration
+#         fields = [
+#             'registration_id', 'student_class', 'subject_class', 'term', 'school',
+#             'status', 'created_at', 'updated_at',
+#             'student_id', 'student_firstname', 'student_surname', 'student_admission_number',
+#             'student_name', 'class_year', 'class_arm', 'department',
+#             'subject_id', 'subject_name', 'term_name', 'school_name'
+#         ]
+#         read_only_fields = [
+#             'term', 'school', 'created_at', 'updated_at',
+#             # 'student_admission_number', 'student_name', 'class_year',
+#             # 'class_arm', 'department', 'subject_name', 'term_name', 'school_name'
+#         ]
+
+#     def get_student_name(self, obj):
+#         return f"{obj.student_class.student.first_name} {obj.student_class.student.last_name}"
+
+#     def validate(self, attrs):
+#         """
+#         Ensure that the registration control is open and term is active for the student's school.
+#         Automatically sets the school and term if not provided.
+#         """
+#         student_class = attrs.get('student_class')
+#         subject_class = attrs.get('subject_class')
+
+#         if not student_class:
+#             raise serializers.ValidationError("Student class is required.")
+
+#         school = student_class.student.school
+#         attrs['school'] = school
+
+#         # Check if registration is open for the school
+#         control = getattr(school, 'registration_control', None)
+#         if not control or not control.is_open:
+#             raise serializers.ValidationError("Subject registration is currently closed for this school.")
+
+#         # Fetch active term
+#         active_term = school.terms.filter(status=True).first()
+#         if not active_term:
+#             raise serializers.ValidationError("No active term found for this school.")
+
+#         attrs['term'] = active_term
+
+#         return attrs
+
 class StudentSubjectRegistrationSerializer(serializers.ModelSerializer):
     # Related fields for better readability
     student_id = serializers.UUIDField(source='student_class.student.student_id', read_only=True)
     student_firstname = serializers.CharField(source='student_class.student.first_name', read_only=True)
     student_surname = serializers.CharField(source='student_class.student.last_name', read_only=True)
     student_admission_number = serializers.CharField(source='student_class.student.admission_number', read_only=True)
-    class_year = serializers.CharField(source='student_class.class_year.name', read_only=True)
-    class_arm = serializers.CharField(source='student_class.class_arm.classes.arm_name', read_only=True)
+
+    # Term / School / Subject details
     department = serializers.CharField(source='subject_class.department.name', read_only=True)
     subject_name = serializers.CharField(source='subject_class.subject.name', read_only=True)
     subject_id = serializers.UUIDField(source='subject_class.subject.subject_id', read_only=True)
     term_name = serializers.CharField(source='term.name', read_only=True)
     school_name = serializers.CharField(source='school.school_name', read_only=True)
+
+    # Computed full name
     student_name = serializers.SerializerMethodField()
+
+    # >>> New: class year & class arm (IDs + names)
+    class_year_id = serializers.SerializerMethodField()
+    class_year = serializers.SerializerMethodField()        # name
+    class_arm_id = serializers.SerializerMethodField()
+    class_arm = serializers.SerializerMethodField()         # name
 
     class Meta:
         model = StudentSubjectRegistration
         fields = [
             'registration_id', 'student_class', 'subject_class', 'term', 'school',
             'status', 'created_at', 'updated_at',
-            'student_id', 'student_firstname', 'student_surname', 'student_admission_number',
-            'student_name', 'class_year', 'class_arm', 'department',
-            'subject_id', 'subject_name', 'term_name', 'school_name'
+
+            'student_id', 'student_firstname', 'student_surname',
+            'student_admission_number', 'student_name',
+
+            # New outputs
+            'class_year_id', 'class_year',
+            'class_arm_id',  'class_arm',
+
+            'department', 'subject_id', 'subject_name', 'term_name', 'school_name',
         ]
         read_only_fields = [
             'term', 'school', 'created_at', 'updated_at',
-            # 'student_admission_number', 'student_name', 'class_year',
-            # 'class_arm', 'department', 'subject_name', 'term_name', 'school_name'
         ]
 
+    # -------- getters --------
     def get_student_name(self, obj):
-        return f"{obj.student_class.student.first_name} {obj.student_class.student.last_name}"
+        s = getattr(obj.student_class, 'student', None)
+        if not s:
+            return ''
+        return f"{getattr(s, 'first_name', '')} {getattr(s, 'last_name', '')}".strip()
 
+    def get_class_year_id(self, obj):
+        # Prefer snapshot FK if available, else fall back to student_class.class_year
+        if getattr(obj, 'class_year_id', None):
+            return obj.class_year_id
+        sc = getattr(obj, 'student_class', None)
+        cy = getattr(sc, 'class_year', None) if sc else None
+        return getattr(cy, 'pk', None)
+
+    def get_class_year(self, obj):
+        # Prefer snapshot name; else use student_class.class_year.class_name (or .name)
+        name = getattr(obj, 'class_year_name', None)
+        if name:
+            return name
+        sc = getattr(obj, 'student_class', None)
+        cy = getattr(sc, 'class_year', None) if sc else None
+        return getattr(cy, 'class_name', None) or getattr(cy, 'name', None)
+
+    def get_class_arm_id(self, obj):
+        if getattr(obj, 'class_arm_id', None):
+            return obj.class_arm_id
+        sc = getattr(obj, 'student_class', None)
+        ca = getattr(sc, 'class_arm', None) if sc else None
+        return getattr(ca, 'pk', None)
+
+    def get_class_arm(self, obj):
+        name = getattr(obj, 'class_arm_name', None)
+        if name:
+            return name
+        sc = getattr(obj, 'student_class', None)
+        ca = getattr(sc, 'class_arm', None) if sc else None
+        # Your model uses `arm_name`; fall back to generic `name` if different
+        return getattr(ca, 'arm_name', None) or getattr(ca, 'name', None)
+
+    # -------- validation --------
     def validate(self, attrs):
         """
-        Ensure that the registration control is open and term is active for the student's school.
-        Automatically sets the school and term if not provided.
+        Ensure that the registration control is open and the term is active for the student's school.
+        Auto-sets `school` and `term`.
         """
         student_class = attrs.get('student_class')
         subject_class = attrs.get('subject_class')
@@ -340,16 +451,15 @@ class StudentSubjectRegistrationSerializer(serializers.ModelSerializer):
         school = student_class.student.school
         attrs['school'] = school
 
-        # Check if registration is open for the school
+        # Registration window must be open
         control = getattr(school, 'registration_control', None)
         if not control or not control.is_open:
             raise serializers.ValidationError("Subject registration is currently closed for this school.")
 
-        # Fetch active term
+        # Active term required
         active_term = school.terms.filter(status=True).first()
         if not active_term:
             raise serializers.ValidationError("No active term found for this school.")
-
         attrs['term'] = active_term
 
         return attrs
